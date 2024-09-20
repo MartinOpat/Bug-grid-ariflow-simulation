@@ -8,7 +8,6 @@ def run_pde(eq):
     init = np.ones((20, 10, 10))
     # Fill the first 5x5 square with ones
     init[:5, :5, :5] = 2
-    print(init)
 
     # field = pde.ScalarField.random_normal(grid, mean=0.5)
     field = pde.ScalarField(grid, init)
@@ -34,6 +33,7 @@ class DiffusionPDE(pde.PDEBase):
     def evolution_rate(self, state, t=0):
         """Evaluate the right hand side of the evolution equation."""
         state_gradient_squared = state.gradient_squared(bc="auto_periodic_neumann")
+        print(type(state_gradient_squared))
         return state_gradient_squared * 0.1
 
 def simple_class_method():
@@ -69,6 +69,6 @@ def built_in_method():
     run_pde(eq)
 
 # simple_string_method() # 18.37 seconds
-# simple_class_method() # 251.9 seconds
-jit_class_method() # 11.7 seconds # Without @jit 13.1 seconds
+simple_class_method() # 251.9 seconds
+# jit_class_method() # 11.7 seconds # Without @jit 13.1 seconds
 # built_in_method() # 14.8 seconds
