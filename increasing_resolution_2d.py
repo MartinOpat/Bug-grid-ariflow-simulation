@@ -87,9 +87,6 @@ def plot_2d_slice(vector_field):
     ax.set_ylabel('Y')
     ax.set_title(f'2D Vector Field Slice at Z = {z_slice}')
 
-    # Show the plot
-    plt.show()
-
 grid = pde.CartesianGrid([[0, 10], [0, 5], [0, 5]], [X_SIZE, Y_SIZE, Z_SIZE], periodic=[False, False, False])
 field = pde.VectorField(grid, data=0)
 # plot_vector_field(field.data)
@@ -101,10 +98,10 @@ x, y, z = grid.cell_coords[..., 0], grid.cell_coords[..., 1], grid.cell_coords[.
 # print(x.shape)
 # section_size = 10 // 3
 # print((4 <= x) & (x <= 6))
-y_width = 1
-y_count = 3
-z_width = 1
-z_count = 3
+y_width = 0.3
+y_count = 10
+z_width = 0.3
+z_count = 10
 boundary_mask = (
     ((4 <= x) & (x <= 6)) &
     # (((y % section_size <= 2) | (y % section_size >= section_size - 2)) |
@@ -116,10 +113,15 @@ boundary_mask = (
     # (z%(z_width + z_count) <= z_width))
     (z%(5/z_count+z_width/2) >= 5/z_count-z_width/2))
 )
+plt.title("boundary mask")
+plt.imshow(boundary_mask[X_SIZE//2,:, :])
 
 eq = CustomPDE(bc=[bc_x, bc_x, bc_x], boundary_mask=boundary_mask)
-result = eq.solve(field, t_range=5, dt=0.001)
+result = eq.solve(field, t_range=1, dt=0.001)
+
+plot_2d_slice(result.data)
 
 # result.to_scalar(scalar='norm').plot_interactive()
 
-plot_2d_slice(result.data)
+# Show the plot
+plt.show()
