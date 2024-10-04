@@ -2,10 +2,12 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pde
 from pde.tools.numba import jit
+import time
 
-X_SIZE = 80 # should be divisible by 2
-Y_SIZE = 40
-Z_SIZE = 40
+
+X_SIZE = 160 # should be divisible by 2
+Y_SIZE = 80
+Z_SIZE = 80
 
 class CustomPDE(pde.PDEBase):
 
@@ -48,43 +50,43 @@ class CustomPDE(pde.PDEBase):
         ans.data[:, self.boundary_mask] = 0
         return ans
     
-    def _make_pde_rhs_numba(self, state):
-        laplace_u = state.grid.make_operator("vector_laplace", bc=self.bc)
-        divergence_u = state.grid.make_operator("divergence", bc=self.bc)
-        gradient_u = state.grid.make_operator("vector_gradient", bc=self.bc)
-        gradient_u_2 = state.grid.make_operator("gradient", bc=self.bc)
-        dot = pde.VectorField(state.grid).make_dot_operator()
+    # def _make_pde_rhs_numba(self, state):
+    #     laplace_u = state.grid.make_operator("vector_laplace", bc=self.bc)
+    #     divergence_u = state.grid.make_operator("divergence", bc=self.bc)
+    #     gradient_u = state.grid.make_operator("vector_gradient", bc=self.bc)
+    #     gradient_u_2 = state.grid.make_operator("gradient", bc=self.bc)
+    #     dot = pde.VectorField(state.grid).make_dot_operator()
 
-        shear_viscosity = 0.1
-        bulk_viscosity = 0.1
-        vector_array = self.vector_array
-        boundary_mask = self.boundary_mask
-        apply_boundary_mask = self.apply_boundary_mask
+    #     shear_viscosity = 0.1
+    #     bulk_viscosity = 0.1
+    #     vector_array = self.vector_array
+    #     boundary_mask = self.boundary_mask
+    #     apply_boundary_mask = self.apply_boundary_mask
 
-        @jit
-        def pde_rhs(state_data, t=0):
-            """ compiled helper function evaluating right hand side """
-            state_divergence = divergence_u(state_data)
-            state_grad2 = gradient_u_2(state_divergence)
-            state_grad = gradient_u(state_data)
-            state_lapacian = laplace_u(state_data)
-            f_u = dot(state_data, state_grad) - shear_viscosity * state_lapacian \
-                    - (bulk_viscosity + shear_viscosity/3) * state_grad2
-            ans = -f_u - 0.1 * vector_array
-            # ans[:, boundary_mask] = 0
-            apply_boundary_mask(ans, boundary_mask)
-            return ans
-        return pde_rhs
+    #     @jit
+    #     def pde_rhs(state_data, t=0):
+    #         """ compiled helper function evaluating right hand side """
+    #         state_divergence = divergence_u(state_data)
+    #         state_grad2 = gradient_u_2(state_divergence)
+    #         state_grad = gradient_u(state_data)
+    #         state_lapacian = laplace_u(state_data)
+    #         f_u = dot(state_data, state_grad) - shear_viscosity * state_lapacian \
+    #                 - (bulk_viscosity + shear_viscosity/3) * state_grad2
+    #         ans = -f_u - 0.1 * vector_array
+    #         # ans[:, boundary_mask] = 0
+    #         apply_boundary_mask(ans, boundary_mask)
+    #         return ans
+    #     return pde_rhs
     
-    @jit
-    def apply_boundary_mask(vector_field, boundary_mask):
-        for i in range(X_SIZE):
-            for j in range(Y_SIZE):
-                for k in range(Z_SIZE):
-                    if boundary_mask[i][j][k] == 1:
-                        vector_field[0][i][j][k] = 0
-                        vector_field[1][i][j][k] = 0
-                        vector_field[2][i][j][k] = 0
+    # @jit
+    # def apply_boundary_mask(vector_field, boundary_mask):
+    #     for i in range(X_SIZE):
+    #         for j in range(Y_SIZE):
+    #             for k in range(Z_SIZE):
+    #                 if boundary_mask[i][j][k] == 1:
+    #                     vector_field[0][i][j][k] = 0
+    #                     vector_field[1][i][j][k] = 0
+    #                     vector_field[2][i][j][k] = 0
 
 
 
@@ -161,7 +163,11 @@ plt.title("boundary mask")
 plt.imshow(boundary_mask[X_SIZE//2,:, :])
 
 eq = CustomPDE(bc=[bc_x, bc_x, bc_x], boundary_mask=boundary_mask)
+
+start_time = time.time()
 result = eq.solve(field, t_range=1, dt=0.001)
+end_time = time.time()
+print("Execution Time: ", end_time - start_time, " seconds")
 
 plot_2d_slice(result.data)
 
