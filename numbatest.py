@@ -1,8 +1,9 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import pde
+from pde.tools.numba import jit
 
-X_SIZE = 80
+X_SIZE = 80 # should be divisible by 2
 Y_SIZE = 40
 Z_SIZE = 40
 
@@ -13,6 +14,7 @@ class CustomPDE(pde.PDEBase):
         # self.x_component_array = np.arange(array_shape[0]).reshape(array_shape[0], 1, 1) * np.ones(array_shape[1:])
         self.bc = bc
         self.boundary_mask = boundary_mask
+        # self.check_implementation = False
         # self.boundary_mask = boundary_mask
 
         # array_shape = (20, 10, 10)
@@ -25,7 +27,7 @@ class CustomPDE(pde.PDEBase):
         # self.vector_array[0] = x_component_array  # x component
         # y and z components remain zero by default
         self.vector_array = np.zeros((3, X_SIZE, Y_SIZE, Z_SIZE))
-        self.vector_array[0] = 1
+        self.vector_array[0, -1 + X_SIZE//2:1+X_SIZE//2, :, :] = 1
 
     def evolution_rate(self, state, t=0):
         """ Custom PDE evolution with modified diffusion rate """
@@ -36,14 +38,56 @@ class CustomPDE(pde.PDEBase):
         # rate.data[self.boundary_mask] *= 0.25
         # shear_viscosity = 2E-5
         # bulk_viscosity = 5E-5
+        laplacian = state.laplace(bc=self.bc)
         shear_viscosity = 0.1
         bulk_viscosity = 0.1
-        f_u = state.dot(state.gradient(bc=self.bc)) - shear_viscosity * state.laplace(bc=self.bc) \
+        f_u = state.dot(state.gradient(bc=self.bc)) - shear_viscosity * laplacian \
                 - (bulk_viscosity + shear_viscosity/3) * state.divergence(bc=self.bc).gradient(bc=self.bc) 
         
         ans = -f_u - 0.1 * self.vector_array
         ans.data[:, self.boundary_mask] = 0
         return ans
+    
+    def _make_pde_rhs_numba(self, state):
+        laplace_u = state.grid.make_operator("vector_laplace", bc=self.bc)
+        divergence_u = state.grid.make_operator("divergence", bc=self.bc)
+        gradient_u = state.grid.make_operator("vector_gradient", bc=self.bc)
+        gradient_u_2 = state.grid.make_operator("gradient", bc=self.bc)
+        dot = pde.VectorField(state.grid).make_dot_operator()
+
+        shear_viscosity = 0.1
+        bulk_viscosity = 0.1
+        vector_array = self.vector_array
+        boundary_mask = self.boundary_mask
+        apply_boundary_mask = self.apply_boundary_mask
+
+        @jit
+        def pde_rhs(state_data, t=0):
+            """ compiled helper function evaluating right hand side """
+            state_divergence = divergence_u(state_data)
+            state_grad2 = gradient_u_2(state_divergence)
+            state_grad = gradient_u(state_data)
+            state_lapacian = laplace_u(state_data)
+            f_u = dot(state_data, state_grad) - shear_viscosity * state_lapacian \
+                    - (bulk_viscosity + shear_viscosity/3) * state_grad2
+            ans = -f_u - 0.1 * vector_array
+            # ans[:, boundary_mask] = 0
+            apply_boundary_mask(ans, boundary_mask)
+            return ans
+        return pde_rhs
+    
+    @jit
+    def apply_boundary_mask(vector_field, boundary_mask):
+        for i in range(X_SIZE):
+            for j in range(Y_SIZE):
+                for k in range(Z_SIZE):
+                    if boundary_mask[i][j][k] == 1:
+                        vector_field[0][i][j][k] = 0
+                        vector_field[1][i][j][k] = 0
+                        vector_field[2][i][j][k] = 0
+
+
+
 
 
 def plot_2d_slice(vector_field):
@@ -121,7 +165,7 @@ result = eq.solve(field, t_range=1, dt=0.001)
 
 plot_2d_slice(result.data)
 
-# result.to_scalar(scalar='norm').plot_interactive()
+result.to_scalar(scalar='norm').plot_interactive()
 
 # Show the plot
 plt.show()
