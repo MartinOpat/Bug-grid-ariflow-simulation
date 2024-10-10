@@ -105,7 +105,7 @@ def plot_2d_slice(vector_field):
     w_slice = w[:, :, z_slice]  # We'll ignore this since it's a 2D plot
 
     # Create the grid corresponding to the X and Y dimensions
-    x, y = np.meshgrid(np.arange(X_SIZE), np.arange(Y_SIZE), indexing='ij')
+    x, y = np.meshgrid(np.linspace(0, 10, num=X_SIZE), np.linspace(0,5, num=Y_SIZE), indexing='ij')
 
     # Compute the magnitude for the 2D vectors (only u and v components)
     magnitude_2d = np.sqrt(u_slice**2 + v_slice**2)
@@ -129,7 +129,25 @@ def plot_2d_slice(vector_field):
     # Set labels and title
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
-    ax.set_title(f'2D Vector Field Slice at Z = {z_slice}')
+    ax.set_title(f'2D Vector Field Slice at Z = 2.5 at index {z_slice}')
+
+def plot_2d_scalar_slice(scalar_field):
+    # Choose a specific Z slice (for example, the middle plane)
+    z_slice = Z_SIZE // 2  # Taking the middle slice, but this can be any valid Z index
+
+    sliced_values = scalar_field[:, :, z_slice]
+    print(f"{sliced_values.shape}")
+
+    # Set up the 2D plot
+    fig, ax = plt.subplots()
+
+    cax = ax.imshow(sliced_values.T, extent=[0, 10, 0, 5], origin='lower')
+    fig.colorbar(cax, ax=ax)
+
+    # Set labels and title
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_title(f'Scalar Field Slice at Z = 2.5 at index {z_slice}')
 
 grid = pde.CartesianGrid([[0, 10], [0, 5], [0, 5]], [X_SIZE, Y_SIZE, Z_SIZE], periodic=[False, False, False])
 scalar_field = pde.VectorField(grid, data=0)
@@ -176,14 +194,14 @@ eq = CustomPDE(bc=[bc_x, bc_y, bc_z], boundary_mask=boundary_mask)
 
 start_time = time.time()
 storage = pde.MemoryStorage()
-result = eq.solve(field, t_range=1, dt=0.01, adaptive=True)
+result = eq.solve(field, t_range=20, dt=0.01, adaptive=True)
 end_time = time.time()
 print("Execution Time: ", end_time - start_time, " seconds")
 
+plot_2d_scalar_slice(result[1].data)
 plot_2d_slice(result[0].data)
 
-
-# # Show the plot
+# Show the plot
 plt.show()
 result[1].plot_interactive()
 result[0].to_scalar(scalar='norm').plot_interactive()
