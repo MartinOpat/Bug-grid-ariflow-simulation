@@ -17,8 +17,8 @@ class CustomPDE(pde.PDEBase):
         self.vector_array = np.zeros((3, X_SIZE, Y_SIZE, Z_SIZE), dtype=np.float64)
         self.vector_array[0, -1 + X_SIZE//2:1 + X_SIZE//2, :, :] = 1
         self.vector_array = np.ascontiguousarray(self.vector_array, dtype=np.float64)
-        self.dynamic_viscosity = 1
-        self.bulk_viscosity = 1
+        self.dynamic_viscosity = 0.5
+        self.bulk_viscosity = 0.5
 
         self.laplace_u = None
         self.divergence_u = None
@@ -32,8 +32,8 @@ class CustomPDE(pde.PDEBase):
               - (self.bulk_viscosity/density + self.dynamic_viscosity / (3*density)) * state.divergence(bc=self.bc).gradient(bc=self.bc)
         ans = -f_u - self.vector_array / density.data[np.newaxis, :, :, :]
         ans.data[:, self.boundary_mask] = 0
-        pressure_derivative = (state*density).divergence(bc=self.bc)
-        return pde.FieldCollection([ans, pressure_derivative])
+        density_derivative = -(state*density).divergence(bc=self.bc)
+        return pde.FieldCollection([ans, density_derivative])
 
     # def _make_pde_rhs_numba(self, state):
     #     if self.laplace_u is None:
@@ -150,8 +150,10 @@ def plot_2d_scalar_slice(scalar_field):
     ax.set_title(f'Scalar Field Slice at Z = 2.5 at index {z_slice}')
 
 grid = pde.CartesianGrid([[0, 10], [0, 5], [0, 5]], [X_SIZE, Y_SIZE, Z_SIZE], periodic=[False, False, False])
+init_density = 15*np.ones((X_SIZE, Y_SIZE, Z_SIZE))
+init_density[:X_SIZE//2, :, :] = 5
 scalar_field = pde.VectorField(grid, data=0)
-density_field = pde.ScalarField(grid, data=10)
+density_field = pde.ScalarField(grid, data=init_density)
 field = pde.FieldCollection([scalar_field, density_field])
 
 # Set ALL x values to 1
@@ -169,10 +171,10 @@ x, y, z = grid.cell_coords[..., 0], grid.cell_coords[..., 1], grid.cell_coords[.
 # section_size = 10 // 3
 # print((4 <= x) & (x <= 6))
 
-y_width = 0.2
-y_count = 6
-z_width = 0.2
-z_count = 6
+y_width = 0.07
+y_count = 4
+z_width = 0.07
+z_count = 4
 
 assert(10/Y_SIZE < y_count and 10/Z_SIZE < z_count)
 
@@ -194,7 +196,7 @@ eq = CustomPDE(bc=[bc_x, bc_y, bc_z], boundary_mask=boundary_mask)
 
 start_time = time.time()
 storage = pde.MemoryStorage()
-result = eq.solve(field, t_range=20, dt=0.01, adaptive=True)
+result = eq.solve(field, t_range=25, dt=0.01, adaptive=True)
 end_time = time.time()
 print("Execution Time: ", end_time - start_time, " seconds")
 
