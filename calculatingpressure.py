@@ -11,7 +11,7 @@ Z_SIZE = 50
 
 class CustomPDE(pde.PDEBase):
 
-    def __init__(self, bc, boundary_mask):
+    def __init__(self, bc, bc_density, boundary_mask):
         self.bc = bc
         self.boundary_mask = np.ascontiguousarray(boundary_mask, dtype=np.bool_)
         self.vector_array = np.zeros((3, X_SIZE, Y_SIZE, Z_SIZE), dtype=np.float64)
@@ -19,6 +19,9 @@ class CustomPDE(pde.PDEBase):
         self.vector_array = np.ascontiguousarray(self.vector_array, dtype=np.float64)
         self.dynamic_viscosity = 0.5
         self.bulk_viscosity = 0.5
+        self.RT = 1
+
+        self.bc_density = bc_density
 
         self.laplace_u = None
         self.divergence_u = None
@@ -30,9 +33,11 @@ class CustomPDE(pde.PDEBase):
         laplacian = state.laplace(bc=self.bc)
         f_u = state.dot(state.gradient(bc=self.bc)) - (self.dynamic_viscosity/density) * laplacian \
               - (self.bulk_viscosity/density + self.dynamic_viscosity / (3*density)) * state.divergence(bc=self.bc).gradient(bc=self.bc)
-        ans = -f_u - self.vector_array / density.data[np.newaxis, :, :, :]
+        
+        pressure = density*self.RT
+        ans = -f_u - pressure.gradient(bc=self.bc_density) / density.data[np.newaxis, :, :, :]
         ans.data[:, self.boundary_mask] = 0
-        density_derivative = -(state*density).divergence(bc=self.bc)
+        density_derivative = -(state*density).divergence(bc=self.bc_density)
         return pde.FieldCollection([ans, density_derivative])
 
     # def _make_pde_rhs_numba(self, states): 
@@ -185,6 +190,8 @@ field = pde.FieldCollection([scalar_field, density_field])
 bc_x = ( "periodic")
 bc_y = ( {"value": 0})
 bc_z = ( {"value": 0})
+bc_y_density = ( "neumann")
+bc_z_density = ( "neumann")
 
 
 # Define the mask for grid lines with thickness of 5 in 3D
@@ -214,7 +221,7 @@ boundary_mask = (
 plt.title("boundary mask")
 plt.imshow(boundary_mask[X_SIZE//2,:, :])
 
-eq = CustomPDE(bc=[bc_x, bc_y, bc_z], boundary_mask=boundary_mask)
+eq = CustomPDE(bc=[bc_x, bc_y, bc_z], bc_density=[bc_x, bc_y_density, bc_z_density], boundary_mask=boundary_mask)
 
 start_time = time.time()
 storage = pde.MemoryStorage()
