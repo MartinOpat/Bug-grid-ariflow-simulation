@@ -237,7 +237,7 @@ eq = CustomPDE(bc=[bc_x, bc_y, bc_z], bc_density=[bc_x_density, bc_y_density, bc
 start_time = time.time()
 storage = pde.MemoryStorage()
 # result = eq.solve(field, t_range=20, dt=1e-2, explicit_fraction=0.5, solver="CrankNicolsonSolver")
-result = eq.solve(field, t_range=20, dt=1e-2, adaptive=True)
+result = eq.solve(field, t_range=100, dt=1e-2, adaptive=True)
 end_time = time.time()
 print("Execution Time: ", end_time - start_time, " seconds")
 
