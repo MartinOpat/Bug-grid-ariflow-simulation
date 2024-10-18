@@ -207,3 +207,5 @@ def get_slice(storage, slice=32):
 
 new_storage = get_slice(storage, slice=50)
 pde.movie(new_storage, filename="output3.mp4", plot_args={}, movie_args={})
+
+vec = data[:3]

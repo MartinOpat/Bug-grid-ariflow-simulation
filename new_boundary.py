@@ -33,7 +33,7 @@ class CustomPDE(pde.PDEBase):
 
         laplacian = state.laplace(bc=self.bc)
         f_u = state.dot(state.gradient(bc=self.bc)) - (self.dynamic_viscosity/density) * laplacian \
-              - (self.bulk_viscosity/density + self.dynamic_viscosity / (3*density)) * state.divergence(bc=self.bc).gradient(bc=self.bc)
+              - (self.bulk_viscosity/density + self.dynamic_viscosity / (3*density)) * state.divergence(bc=self.bc).gradient(bc={"derivative": 0})
         
         pressure = density*self.RT
         ans = -f_u - pressure.gradient(bc=self.bc_density) / density.data[np.newaxis, :, :, :]
@@ -187,7 +187,7 @@ field = pde.FieldCollection([scalar_field, density_field])
 # Set ALL x values to 1
 # field.data[0, :, :, :] = 1
 
-bc_left_x = {"value": 0.1}       # Dirichlet condition on the left (x = 0)
+bc_left_x = {"value": [0.1, 0, 0]}       # Dirichlet condition on the left (x = 0)
 bc_right_x = {"derivative": 0}   # Neumann condition on the right (x = X_SIZE)
 bc_x = [bc_left_x, bc_right_x] 
 bc_y = ( {"derivative": 0})
@@ -211,24 +211,34 @@ x, y, z = grid.cell_coords[..., 0], grid.cell_coords[..., 1], grid.cell_coords[.
 # section_size = 10 // 3
 # print((4 <= x) & (x <= 6))
 
-y_width = 0.07
-y_count = 4
-z_width = 0.07
-z_count = 4
+y_count = 5
+z_count = 5
+y_line_width_in_indices = 1  # TODO: Try to make this thicker
+z_line_width_in_indices = 1
 
-assert(10/Y_SIZE < y_count and 10/Z_SIZE < z_count)
+# Compute the size of each cell in indices
+y_cell_size = Y_SIZE // y_count
+z_cell_size = Z_SIZE // z_count
+y_indices = np.arange(Y_SIZE)
+z_indices = np.arange(Z_SIZE)
 
-boundary_mask = (
-    ((4 <= x) & (x <= 6)) &
-    # (((y % section_size <= 2) | (y % section_size >= section_size - 2)) |
-    # (((2 <= y) & (y <= 3)) |
-    # ((y%(y_width + y_count) <= y_width) |
-    ((y%(5/y_count) >= 5/y_count-y_width/2) | (y%(5/y_count) <= y_width/2) |
-    # ((z % section_size <= 2) | (z % section_size >= section_size - 2)))
-    # ((2 <= z) & (z <= 3)))
-    # (z%(z_width + z_count) <= z_width))
-    (z%(5/z_count) >= 5/z_count-z_width/2) | (z%(5/z_count) <= z_width/2))
-)
+# Generate masks for y and z
+y_mask = (y_indices % y_cell_size) < y_line_width_in_indices
+z_mask = (z_indices % z_cell_size) < z_line_width_in_indices
+y_mask_3d = y_mask[np.newaxis, :, np.newaxis]
+z_mask_3d = z_mask[np.newaxis, np.newaxis, :]
+
+yz_mask = y_mask_3d | z_mask_3d
+boundary_mask_yz = np.tile(yz_mask, (X_SIZE, 1, 1))
+x_mask = (x >= 4) & (x <= 6)
+boundary_mask = x_mask & boundary_mask_yz
+boundary_mask = x_mask & (y_mask[:, np.newaxis] | z_mask[np.newaxis, :])
+
+# Make outter edges of the grid (yz) be always true
+boundary_mask[:, 0, :] = False
+boundary_mask[:, Y_SIZE-1, :] = False
+boundary_mask[:, :, 0] = False
+boundary_mask[:, :, Z_SIZE-1] = False
 plt.title("boundary mask")
 plt.imshow(boundary_mask[X_SIZE//2,:, :])
 
