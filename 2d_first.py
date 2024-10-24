@@ -189,6 +189,21 @@ class LivePlotTracker2(pde.LivePlotTracker):
         field_obj = pde.ScalarField(self.grid, data=sliced_values)
         super().handle(field_obj, t)
 
+class LivePlotTrackerVf(pde.LivePlotTracker):
+    grid_size = [X_SIZE, Y_SIZE]
+    grid = pde.UnitGrid(grid_size)  
+    z_slice = Z_SIZE // 2
+
+    def initialize(self, state: pde.FieldBase, info = None) -> float:
+        field_obj = pde.ScalarField(self.grid)
+        return super().initialize(field_obj, info)
+
+    def handle(self, state: pde.FieldBase, t: float) -> None:
+        # sliced_values = state.data[3][:, :, self.z_slice]
+        sliced_values = np.linalg.norm(state.data[:3], axis=0)[:, :, self.z_slice]
+        field_obj = pde.ScalarField(self.grid, data=sliced_values)
+        super().handle(field_obj, t)
+
 def plot_2d_slice(vector_field):
     # Extract the u, v, w components
     u = vector_field[0]
@@ -332,7 +347,8 @@ storage = pde.MemoryStorage()
 result = eq.solve(field, t_range=100, dt=1e-2, adaptive=True, tracker=[
     storage.tracker(),
     pde.ProgressTracker(),
-    LivePlotTracker2()
+    LivePlotTracker2(),
+    LivePlotTrackerVf()
     ])
 # result = eq.solve(field, t_range=1, dt=1e-2, adaptive=True)
 end_time = time.time()
