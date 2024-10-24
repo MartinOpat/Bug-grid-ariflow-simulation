@@ -3,26 +3,27 @@ from matplotlib import pyplot as plt
 import pde
 from pde.tools.numba import jit
 from numba import prange
-from scipy.ndimage import gaussian_filter, convolve, uniform_filter
 import time
+from scipy.ndimage import gaussian_filter, convolve, uniform_filter
 
-X_SIZE = 400 # should be divisible by 2
-Y_SIZE = 200
-Z_SIZE = 1
+X_SIZE = 100 # should be divisible by 2
+Y_SIZE = 50
+Z_SIZE = 50
 
 class CustomPDE(pde.PDEBase):
 
-    def __init__(self, bc, bc_density, boundary_mask, bc_vec):
+    def __init__(self, bc, bc_density, boundary_mask, bc_vec, fan):
         self.bc = bc
         self.boundary_mask = np.ascontiguousarray(boundary_mask, dtype=np.bool_)
         self.vector_array = np.zeros((3, X_SIZE, Y_SIZE, Z_SIZE), dtype=np.float64)
         self.vector_array[0, -1 + X_SIZE//2:1 + X_SIZE//2, :, :] = 10
         self.vector_array = np.ascontiguousarray(self.vector_array, dtype=np.float64)
-        self.dynamic_viscosity = 0.005
-        self.bulk_viscosity = 0.1
+        self.fan = fan
+
+        self.dynamic_viscosity = 0.01
+        self.bulk_viscosity = 1
         self.bc_vec = bc_vec
         self.RT = 1
-        self.artificial_viscosity_coefficient = 0.2
 
         self.bc_density = bc_density
 
@@ -33,24 +34,20 @@ class CustomPDE(pde.PDEBase):
 
     def evolution_rate(self, states, t=0):
         state, density = states
-
+        density.data = uniform_filter(density.data, size=4)
         laplacian = state.laplace(bc=self.bc_vec)
         f_u = state.dot(state.gradient(bc=self.bc_vec)) - (self.dynamic_viscosity/density) * laplacian \
               - (self.bulk_viscosity/density + self.dynamic_viscosity / (3*density)) * state.divergence(bc=self.bc_vec).gradient(bc=self.bc)
         
         pressure = density*self.RT
         ans = -f_u - pressure.gradient(bc=self.bc_density) / density.data[np.newaxis, :, :, :]
-
-        artificial_viscosity = self.artificial_viscosity_coefficient * state.laplace(bc=self.bc_vec)
-        ans += artificial_viscosity
-
         ans.data[:, self.boundary_mask] = 0
+        ans.data[0, self.fan] += 0.1
         density_derivative = -(state*density).divergence(bc=self.bc_density)
-
 
         return pde.FieldCollection([ans, density_derivative])
 
-    def _make_pde_rhs_numba(self, states): 
+    # def _make_pde_rhs_numba(self, states): 
         state, state_density = states
         if self.laplace_u is None:
             self.laplace_u = state.grid.make_operator("vector_laplace", bc=self.bc_vec)
@@ -81,7 +78,7 @@ class CustomPDE(pde.PDEBase):
         bulk_viscosity = self.bulk_viscosity
         vector_array = self.vector_array
         boundary_mask = self.boundary_mask
-        artificial_viscosity_coefficient = self.artificial_viscosity_coefficient
+        fan = self.fan
         # apply_boundary_mask = self.apply_boundary_mask
         RT = self.RT
 
@@ -95,6 +92,13 @@ class CustomPDE(pde.PDEBase):
                             vector_field[1, i, j, k] = 0
                             vector_field[2, i, j, k] = 0
 
+        @jit(nopython=True, parallel=True)
+        def apply_fan(vector_field, fan):
+            for i in prange(X_SIZE):
+                for j in range(Y_SIZE):
+                    for k in range(Z_SIZE):
+                        if fan[i, j, k]:
+                            vector_field[0, i, j, k] += 0.1
         
         @jit(nopython=True, parallel=True)
         def multiply_scalar_vector(scalar, vector):
@@ -143,12 +147,11 @@ class CustomPDE(pde.PDEBase):
             # ans = -f_u - pressure.gradient(bc=self.bc_density) / density.data[np.newaxis, :, :, :]
             ans = -f_u - multiply_scalar_vector_field(1/state_density_data, gradient_p_u(pressure))
 
-            ans += state_lapacian*artificial_viscosity_coefficient
-
             apply_boundary_mask(ans, boundary_mask)
 
             density_t = -state_divergence_p
             # return np.stack([ans, density_t])
+            apply_fan(ans, fan)
             return np.concatenate((ans, density_t[np.newaxis,:,:,:]), axis=0)
 
         return pde_rhs
@@ -226,8 +229,8 @@ def plot_2d_scalar_slice(scalar_field):
     ax.set_title(f'Scalar Field Slice at Z = 2.5 at index {z_slice}')
 
 grid = pde.CartesianGrid([[0, 10], [0, 5], [0, 5]], [X_SIZE, Y_SIZE, Z_SIZE], periodic=[False, False, False])
-# init_density = 15*np.ones((X_SIZE, Y_SIZE, Z_SIZE))
-init_density = np.random.normal(loc=15, scale=0.01, size=(X_SIZE, Y_SIZE, Z_SIZE))
+init_density = 15*np.ones((X_SIZE, Y_SIZE, Z_SIZE))
+# init_density = np.random.normal(loc=15, scale=0.01, size=(X_SIZE, Y_SIZE, Z_SIZE))
 
 # init_density[:X_SIZE//2, :, :] = 5
 scalar_field = pde.VectorField(grid, data=0)
@@ -237,9 +240,10 @@ field = pde.FieldCollection([scalar_field, density_field])
 # Set ALL x values to 1
 # field.data[0, :, :, :] = 1
 
-bc_left_x = {"value": [0.1, 0, 0]}       # Dirichlet condition on the left (x = 0)
-bc_right_x = {"derivative": 0}   # Neumann condition on the right (x = X_SIZE)
-bc_x_vec = [bc_left_x, bc_right_x] 
+# bc_left_x = {"value": [0.1, 0, 0]}       # Dirichlet condition on the left (x = 0)
+# bc_right_x = {"derivative": 0}   # Neumann condition on the right (x = X_SIZE)
+# bc_x_vec = [bc_left_x, bc_right_x] 
+bc_x_vec = {"derivative": 0}   # Neumann condition on the right (x = X_SIZE)
 bc_y = ( {"derivative": 0})
 bc_z = ( {"derivative": 0})
 
@@ -253,9 +257,6 @@ bc_x_density = [bc_left_density, bc_right_density]
 bc_x_density = ( {"derivative": 0})
 bc_y_density = ( {"derivative": 0})
 bc_z_density = ( {"derivative": 0})
-
-
-
 
 # Define the mask for grid lines with thickness of 5 in 3D
 x, y, z = grid.cell_coords[..., 0], grid.cell_coords[..., 1], grid.cell_coords[..., 2]
@@ -274,8 +275,6 @@ y_empty_width = 5/y_count - y_width
 y_total_width = y_empty_width + y_count
 z_empty_width = 5/z_count - z_width
 z_total_width = z_empty_width + z_count
-test1= (y[0].T[0])
-test2= (((y+y_total_width/2)%y_total_width <= y_width)[0].T[0])
 
 boundary_mask = (
     ((4 <= x) & (x <= 6)) &
@@ -288,14 +287,26 @@ boundary_mask = (
     ((z+z_total_width/2)%z_total_width <= z_width))
     # (z%(5/z_count) >= 5/z_count-z_width/2) | (z%(5/z_count) <= z_width/2))
 )
-
 # boundary_mask = np.zeros((X_SIZE, Y_SIZE, Z_SIZE))
+
+fan = (
+    (1.5 <= x) & (x <= 2.5) &
+    (2.75 <= y) & (y <= 3.25) &
+    (2.75 <= z) & (z <= 4.5)
+)
+
 
 plt.title("boundary mask")
 plt.imshow(boundary_mask[X_SIZE//2,:, :])
 plt.show()
 
-eq = CustomPDE(bc=[bc_x, bc_y, bc_z], bc_vec=[bc_x_vec, bc_y, bc_z], bc_density=[bc_x_density, bc_y_density, bc_z_density], boundary_mask=boundary_mask)
+eq = CustomPDE(
+    bc=[bc_y, bc_x, bc_z],
+    bc_vec=[bc_y, bc_x_vec, bc_z],
+    bc_density=[bc_x_density, bc_y_density, bc_z_density],
+    boundary_mask=boundary_mask,
+    fan=fan
+    )
 
 start_time = time.time()
 storage = pde.MemoryStorage()

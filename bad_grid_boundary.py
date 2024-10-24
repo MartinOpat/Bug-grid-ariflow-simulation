@@ -19,8 +19,8 @@ class CustomPDE(pde.PDEBase):
         self.vector_array = np.zeros((3, X_SIZE, Y_SIZE, Z_SIZE), dtype=np.float64)
         self.vector_array[0, -1 + X_SIZE//2:1 + X_SIZE//2, :, :] = 10
         self.vector_array = np.ascontiguousarray(self.vector_array, dtype=np.float64)
-        self.dynamic_viscosity = 0.1
-        self.bulk_viscosity = 0.1
+        self.dynamic_viscosity = 0.01
+        self.bulk_viscosity = 0.01
         self.RT = 1
         self.bc_vec = bc_vec
 
