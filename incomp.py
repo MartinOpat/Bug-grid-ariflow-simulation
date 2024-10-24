@@ -6,8 +6,8 @@ from numba import prange
 import time
 
 X_SIZE = 100 # should be divisible by 2
-Y_SIZE = 50
-Z_SIZE = 50
+Y_SIZE = 250
+Z_SIZE = 1
 
 class CustomPDE(pde.PDEBase):
 
@@ -283,33 +283,35 @@ grid = pde.CartesianGrid([[0, 10], [0, 5], [0, 5]], [X_SIZE, Y_SIZE, Z_SIZE], pe
 x, y, z = grid.cell_coords[..., 0], grid.cell_coords[..., 1], grid.cell_coords[..., 2]
 
 y_count = 5
-z_count = 5
-y_line_width_in_indices = 1  # TODO: Try to make this thicker
-z_line_width_in_indices = 1
+# z_count = 1
+y_line_width_in_indices = 10  # TODO: Try to make this thicker
+z_line_width_in_indices = 0
 
 # Compute the size of each cell in indices
 y_cell_size = Y_SIZE // y_count
-z_cell_size = Z_SIZE // z_count
+# z_cell_size = Z_SIZE // z_count
 y_indices = np.arange(Y_SIZE)
-z_indices = np.arange(Z_SIZE)
+# z_indices = np.arange(Z_SIZE)
 
 # Generate masks for y and z
 y_mask = (y_indices % y_cell_size) < y_line_width_in_indices
-z_mask = (z_indices % z_cell_size) < z_line_width_in_indices
+# z_mask = (z_indices % z_cell_size) < z_line_width_in_indices
 y_mask_3d = y_mask[np.newaxis, :, np.newaxis]
-z_mask_3d = z_mask[np.newaxis, np.newaxis, :]
+# z_mask_3d = z_mask[np.newaxis, np.newaxis, :]
 
-yz_mask = y_mask_3d | z_mask_3d
+# yz_mask = y_mask_3d | z_mask_3d
+yz_mask = y_mask_3d
 boundary_mask_yz = np.tile(yz_mask, (X_SIZE, 1, 1))
 x_mask = (x >= 4.9) & (x <= 5.1)
 boundary_mask = x_mask & boundary_mask_yz
-boundary_mask = x_mask & (y_mask[:, np.newaxis] | z_mask[np.newaxis, :])
+# boundary_mask = x_mask & (y_mask[:, np.newaxis] | z_mask[np.newaxis, :])
+boundary_mask = x_mask & y_mask[:, np.newaxis]
 
 # Make outter edges of the grid (yz) be always true
-boundary_mask[45:55+1, 0:y_line_width_in_indices+1, :] = True
-boundary_mask[45:55+1, Y_SIZE-y_line_width_in_indices-1: Y_SIZE, :] = True
-boundary_mask[45:56+1, :, 0:z_line_width_in_indices+1] = True
-boundary_mask[45:55+1, :, Z_SIZE-z_line_width_in_indices-1:Z_SIZE] = True
+boundary_mask[245:255+1, 0:y_line_width_in_indices+1, :] = False
+boundary_mask[245:255+1, Y_SIZE-y_line_width_in_indices-1: Y_SIZE, :] = False
+# boundary_mask[45:56+1, :, 0:z_line_width_in_indices+1] = False
+# boundary_mask[45:55+1, :, Z_SIZE-z_line_widzth_in_indices-1:Z_SIZE] = False
 
 plt.title("boundary mask x-y")
 plt.imshow(boundary_mask[X_SIZE//2,:, :])
@@ -326,7 +328,7 @@ plt.show()
 
 v0 = 1.0
 v0_par = parabolic_profile_2d(5, 5, v0, Y_SIZE, Z_SIZE, 5)  # 5,5 needs to match the grid size
-print(v0_par)
+# print(v0_par)
 
 init_density = 1*np.ones((X_SIZE, Y_SIZE, Z_SIZE))
 # init_density = np.random.normal(loc=15, scale=0.01, size=(X_SIZE, Y_SIZE, Z_SIZE))
