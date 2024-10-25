@@ -31,6 +31,8 @@ class CustomPDE(pde.PDEBase):
         self.gradient_u = None
         self.gradient_u_2 = None
 
+        self.check_implementation = False
+
     def evolution_rate(self, states, t=0):
         state, density = states
 
@@ -49,7 +51,7 @@ class CustomPDE(pde.PDEBase):
 
         artificial_viscosity = self.artificial_viscosity_coefficient * state.laplace(bc=self.bc_vec)
         ans += artificial_viscosity
-        ans.data[0, ~self.boundary_mask] += 0.1
+        ans.data[0, ~self.boundary_mask] += np.random.normal(loc=0.1, scale=0.01, size=ans.data[0, ~self.boundary_mask].shape)
 
         # ans.data[:, self.boundary_mask] = 0
         density_derivative = -(state*density).divergence(bc=self.bc_density)
@@ -163,7 +165,10 @@ class CustomPDE(pde.PDEBase):
             ans = -f_u - multiply_scalar_vector_field(1/state_density_data, gradient_p_u(pressure))
 
             ans += state_lapacian*artificial_viscosity_coefficient
-            apply_force_to_x(ans, 0.1)
+
+            # Force from normal distribution
+            force = np.random.normal(loc=0.1, scale=0.01)
+            apply_force_to_x(ans, force)
 
             apply_boundary_mask(ans, boundary_mask)
 
@@ -299,7 +304,7 @@ x, y, z = grid.cell_coords[..., 0], grid.cell_coords[..., 1], grid.cell_coords[.
 # section_size = 10 // 3
 # print((4 <= x) & (x <= 6))
 
-y_count = 5
+y_count = 5  # Hole count
 # z_count = 1
 y_line_width_in_indices = 10  # TODO: Try to make this thicker
 z_line_width_in_indices = 0
@@ -338,6 +343,7 @@ idx = X_SIZE//2  # Index of the window tracker for the density
 plt.title("boundary mask")
 plt.imshow(boundary_mask[X_SIZE//2,:, :])
 plt.show()
+exit()
 
 eq = CustomPDE(bc=[bc_x, bc_y, bc_z], bc_vec=[bc_x, bc_y, bc_z], bc_density=[bc_x_density, bc_y_density, bc_z_density], boundary_mask=boundary_mask)
 
