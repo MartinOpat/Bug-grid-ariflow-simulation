@@ -352,9 +352,10 @@ def get_statistics(states, time):
     print("dm_dt", dm_dt)
     return {"dm_dt": dm_dt}
 
-data_tracker = pde.DataTracker(get_statistics, interval=0.1)
+data_tracker_interval = 0.1
+data_tracker = pde.DataTracker(get_statistics, interval=data_tracker_interval)
 
-result = eq.solve(field, t_range=100, dt=1e-2, adaptive=True, tracker=[
+result = eq.solve(field, t_range=30, dt=1e-2, adaptive=True, tracker=[
     storage.tracker(),
     pde.ProgressTracker(),
     LivePlotTracker2(),
@@ -418,4 +419,16 @@ new_storage2 = get_z_slice_density_movie(storage)
 vmin = np.min(new_storage2.data)
 vmax = np.max(new_storage2.data)
 
-pde.movie(new_storage2, filename="densityzslice.mp4", plot_args={"vmin": vmin, "vmax": vmax}, movie_args={})
+# pde.movie(new_storage2, filename="densityzslice.mp4", plot_args={"vmin": vmin, "vmax": vmax}, movie_args={})
+
+dm_dts = []
+for dm_dt in data_tracker.data:
+    dm_dts.append(dm_dt['dm_dt'])
+
+dm_dts = np.array(dm_dts)
+ts = np.arange(start=0, stop=len(dm_dts)*data_tracker_interval, step=data_tracker_interval)
+
+plt.figure()
+plt.title("dm_dt vs time")
+plt.plot(ts, dm_dts)
+plt.show()
