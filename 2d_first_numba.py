@@ -327,10 +327,17 @@ eq = CustomPDE(bc=[bc_x, bc_y, bc_z], bc_vec=[bc_x, bc_y, bc_z], bc_density=[bc_
 start_time = time.time()
 storage = pde.MemoryStorage()
 # result = eq.solve(field, t_range=20, dt=1e-2, explicit_fraction=0.5, solver="CrankNicolsonSolver")
+def get_statistics(state, time):
+    print(f"{time=}")
+    return {"mean": state.data.mean()}
+
+data_tracker = pde.DataTracker(get_statistics, interval=10)
+
 result = eq.solve(field, t_range=100, dt=1e-2, adaptive=True, tracker=[
     storage.tracker(),
     pde.ProgressTracker(),
-    LivePlotTracker2()
+    LivePlotTracker2(),
+    data_tracker,
     ])
 # result = eq.solve(field, t_range=1, dt=1e-2, adaptive=True)
 end_time = time.time()
