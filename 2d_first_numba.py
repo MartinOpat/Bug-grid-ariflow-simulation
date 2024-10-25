@@ -23,7 +23,7 @@ class CustomPDE(pde.PDEBase):
         self.bc_vec = bc_vec
         self.RT = 1
         self.artificial_viscosity_coefficient = 0.2
-
+    
         self.bc_density = bc_density
 
         self.laplace_u = None
@@ -33,7 +33,12 @@ class CustomPDE(pde.PDEBase):
 
     def evolution_rate(self, states, t=0):
         state, density = states
+
         state.data[:, self.boundary_mask] = 0
+                # Cap speed at \sqrt{3} v0
+        # state.data[0, :, :, :] = np.clip(state.data[0, :, :, :], -10, 10)
+        # state.data[1, :, :, :] = np.clip(state.data[1, :, :, :], -10, 10)
+        # state.data[2, :, :, :] = np.clip(state.data[2, :, :, :], -10, 10)
 
         laplacian = state.laplace(bc=self.bc_vec)
         f_u = state.dot(state.gradient(bc=self.bc_vec)) - (self.dynamic_viscosity/density) * laplacian \
@@ -44,9 +49,12 @@ class CustomPDE(pde.PDEBase):
 
         artificial_viscosity = self.artificial_viscosity_coefficient * state.laplace(bc=self.bc_vec)
         ans += artificial_viscosity
+        ans.data[0, ~self.boundary_mask] += 0.1
 
-        ans.data[:, self.boundary_mask] = 0
+        # ans.data[:, self.boundary_mask] = 0
         density_derivative = -(state*density).divergence(bc=self.bc_density)
+        # density_derivative.data[self.boundary_mask] = 0
+        ans.data[:, self.boundary_mask] = 0
 
 
         return pde.FieldCollection([ans, density_derivative])
@@ -116,13 +124,21 @@ class CustomPDE(pde.PDEBase):
 
             return result
 
+        @jit(nopython=True, parallel=True)
+        def apply_force_to_x(vector_field, force):
+            for x in prange(X_SIZE):
+                for y in range(Y_SIZE):
+                    for z in range(Z_SIZE):
+                        if not boundary_mask[x, y, z]:
+                            vector_field[0, x, y, z] += force
+            
 
         @jit(nopython=True, parallel=True)
         def pde_rhs(state_datas, t=0):
             state_data = state_datas[0:3]
             state_density_data = state_datas[3]
-
             apply_boundary_mask(state_data, boundary_mask)
+            # state_data = clamp_vector_field(state_data, 10)
             # print(type(state_density_data))
             # state_data, state_density_data = state_datas
             state_lapacian = laplace_u(state_data)
@@ -147,6 +163,7 @@ class CustomPDE(pde.PDEBase):
             ans = -f_u - multiply_scalar_vector_field(1/state_density_data, gradient_p_u(pressure))
 
             ans += state_lapacian*artificial_viscosity_coefficient
+            apply_force_to_x(ans, 0.1)
 
             apply_boundary_mask(ans, boundary_mask)
 
@@ -211,47 +228,6 @@ def plot_2d_slice(vector_field):
     ax.set_ylabel('Y')
     ax.set_title(f'2D Vector Field Slice at Z = 2.5 at index {z_slice}')
 
-def plot_2d_slice_stream(vector_field):
-    # Extract the u, v, w components
-    u = vector_field[0]
-    v = vector_field[1]
-    w = vector_field[2]
-
-    # Choose a specific Z slice (for example, the middle plane)
-    z_slice = Z_SIZE // 2  # Taking the middle slice, but this can be any valid Z index
-
-    # Slice the vector field at the chosen Z-plane
-    u_slice = u[:, :, z_slice]
-    v_slice = v[:, :, z_slice]
-    w_slice = w[:, :, z_slice]  # We'll ignore this since it's a 2D plot
-
-    # Create the grid corresponding to the X and Y dimensions
-    x, y = np.meshgrid(np.linspace(0, 10, num=X_SIZE), np.linspace(0,5, num=Y_SIZE), indexing='ij')
-
-    # Compute the magnitude for the 2D vectors (only u and v components)
-    magnitude_2d = np.sqrt(u_slice**2 + v_slice**2)
-
-    # Set up the 2D plot
-    fig, ax = plt.subplots()
-
-    # Normalize the magnitudes to [0, 1] for the colormap
-    norm = plt.Normalize(magnitude_2d.min(), magnitude_2d.max())
-    cmap = plt.cm.viridis
-    colors = cmap(norm(magnitude_2d))
-
-    # Plot the 2D quiver plot using the u and v components
-    ax.quiver(x, y, u_slice, v_slice, color=colors.reshape(-1, 4), angles='xy', scale_units='xy')
-
-    # Add a colorbar to indicate the magnitude
-    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
-    sm.set_array([])
-    fig.colorbar(sm, ax=ax, label='Magnitude')
-
-    # Set labels and title
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_title(f'2D Vector Field Slice at Z = 2.5 at index {z_slice}')
-
 def plot_2d_scalar_slice(scalar_field):
     # Choose a specific Z slice (for example, the middle plane)
     z_slice = Z_SIZE // 2  # Taking the middle slice, but this can be any valid Z index
@@ -269,7 +245,7 @@ def plot_2d_scalar_slice(scalar_field):
     ax.set_ylabel('Y')
     ax.set_title(f'Scalar Field Slice at Z = 2.5 at index {z_slice}')
 
-grid = pde.CartesianGrid([[0, 10], [0, 5], [0, 5]], [X_SIZE, Y_SIZE, Z_SIZE], periodic=[False, False, False])
+grid = pde.CartesianGrid([[0, 10], [0, 5], [0, 5]], [X_SIZE, Y_SIZE, Z_SIZE], periodic=[True, False, False])
 # init_density = 15*np.ones((X_SIZE, Y_SIZE, Z_SIZE))
 init_density = np.random.normal(loc=15, scale=0.01, size=(X_SIZE, Y_SIZE, Z_SIZE))
 
@@ -287,14 +263,14 @@ bc_x_vec = [bc_left_x, bc_right_x]
 bc_y = ( {"derivative": 0})
 bc_z = ( {"derivative": 0})
 
-bc_x = {"derivative": 0}
-bc_y = ( {"derivative": 0})
-bc_z = ( {"derivative": 0})
+bc_x = "periodic"
+bc_y = ( {"value": 0})
+bc_z = ( {"value": 0})
 
 bc_left_density = {"value": 15}  # Dirichlet condition for density at x = 0
 bc_right_density = {"derivative": 0} 
 bc_x_density = [bc_left_density, bc_right_density]
-bc_x_density = ( {"derivative": 0})
+bc_x_density = "periodic"
 bc_y_density = ( {"derivative": 0})
 bc_z_density = ( {"derivative": 0})
 
@@ -333,10 +309,12 @@ boundary_mask = x_mask & boundary_mask_yz
 boundary_mask = x_mask & y_mask[:, np.newaxis]
 
 # Make outter edges of the grid (yz) be always true
-boundary_mask[X_SIZE//2 - 5:X_SIZE//2 + 6, 0:y_line_width_in_indices+1, :] = False
-boundary_mask[X_SIZE//2 - 5:X_SIZE//2 + 6, Y_SIZE-y_line_width_in_indices-1: Y_SIZE, :] = False
+boundary_mask[X_SIZE//2-5:X_SIZE//2+5+1, 0:y_line_width_in_indices+1, :] = False
+boundary_mask[X_SIZE//2-5:X_SIZE//2+5+1, Y_SIZE-y_line_width_in_indices-1: Y_SIZE, :] = False
 # boundary_mask[45:56+1, :, 0:z_line_width_in_indices+1] = False
 # boundary_mask[45:55+1, :, Z_SIZE-z_line_widzth_in_indices-1:Z_SIZE] = False
+init_density[boundary_mask] = 15
+
 
 # boundary_mask = np.zeros((X_SIZE, Y_SIZE, Z_SIZE))
 
@@ -344,7 +322,7 @@ plt.title("boundary mask")
 plt.imshow(boundary_mask[X_SIZE//2,:, :])
 plt.show()
 
-eq = CustomPDE(bc=[bc_x, bc_y, bc_z], bc_vec=[bc_x_vec, bc_y, bc_z], bc_density=[bc_x_density, bc_y_density, bc_z_density], boundary_mask=boundary_mask)
+eq = CustomPDE(bc=[bc_x, bc_y, bc_z], bc_vec=[bc_x, bc_y, bc_z], bc_density=[bc_x_density, bc_y_density, bc_z_density], boundary_mask=boundary_mask)
 
 start_time = time.time()
 storage = pde.MemoryStorage()
