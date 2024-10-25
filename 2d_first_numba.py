@@ -187,6 +187,21 @@ class LivePlotTracker2(pde.LivePlotTracker):
         field_obj = pde.ScalarField(self.grid, data=sliced_values)
         super().handle(field_obj, t)
 
+class LivePlotTrackerVf(pde.LivePlotTracker):
+    grid_size = [X_SIZE, Y_SIZE]
+    grid = pde.UnitGrid(grid_size)  
+    z_slice = Z_SIZE // 2
+
+    def initialize(self, state: pde.FieldBase, info = None) -> float:
+        field_obj = pde.ScalarField(self.grid)
+        return super().initialize(field_obj, info)
+
+    def handle(self, state: pde.FieldBase, t: float) -> None:
+        # sliced_values = state.data[3][:, :, self.z_slice]
+        sliced_values = np.linalg.norm(state.data[:3], axis=0)[:, :, self.z_slice]
+        field_obj = pde.ScalarField(self.grid, data=sliced_values)
+        super().handle(field_obj, t)
+
 def plot_2d_slice(vector_field):
     # Extract the u, v, w components
     u = vector_field[0]
@@ -246,6 +261,7 @@ def plot_2d_scalar_slice(scalar_field):
     ax.set_title(f'Scalar Field Slice at Z = 2.5 at index {z_slice}')
 
 grid = pde.CartesianGrid([[0, 10], [0, 5], [0, 5]], [X_SIZE, Y_SIZE, Z_SIZE], periodic=[True, False, False])
+dy = 5 / Y_SIZE
 # init_density = 15*np.ones((X_SIZE, Y_SIZE, Z_SIZE))
 init_density = np.random.normal(loc=15, scale=0.01, size=(X_SIZE, Y_SIZE, Z_SIZE))
 
@@ -315,6 +331,7 @@ boundary_mask[X_SIZE//2-5:X_SIZE//2+5+1, Y_SIZE-y_line_width_in_indices-1: Y_SIZ
 # boundary_mask[45:55+1, :, Z_SIZE-z_line_widzth_in_indices-1:Z_SIZE] = False
 init_density[boundary_mask] = 15
 
+idx = X_SIZE//2  # Index of the window tracker for the density
 
 # boundary_mask = np.zeros((X_SIZE, Y_SIZE, Z_SIZE))
 
@@ -327,17 +344,22 @@ eq = CustomPDE(bc=[bc_x, bc_y, bc_z], bc_vec=[bc_x, bc_y, bc_z], bc_density=[bc_
 start_time = time.time()
 storage = pde.MemoryStorage()
 # result = eq.solve(field, t_range=20, dt=1e-2, explicit_fraction=0.5, solver="CrankNicolsonSolver")
-def get_statistics(state, time):
-    print(f"{time=}")
-    return {"mean": state.data.mean()}
+def get_statistics(states, time):
+    global idx, dy
+    state, state_density = states
 
-data_tracker = pde.DataTracker(get_statistics, interval=10)
+    dm_dt = np.sum(state_density.data[idx] * state.data[0][idx] * dy)
+    print("dm_dt", dm_dt)
+    return {"dm_dt": dm_dt}
+
+data_tracker = pde.DataTracker(get_statistics, interval=0.1)
 
 result = eq.solve(field, t_range=100, dt=1e-2, adaptive=True, tracker=[
     storage.tracker(),
     pde.ProgressTracker(),
     LivePlotTracker2(),
     data_tracker,
+    LivePlotTrackerVf()
     ])
 # result = eq.solve(field, t_range=1, dt=1e-2, adaptive=True)
 end_time = time.time()
