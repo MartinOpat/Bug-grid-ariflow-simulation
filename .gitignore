@@ -169,3 +169,5 @@ results.csv
 cpp/results.csv
 output.csv
 cpp/output.csv
+results
+**/.DS_Store
