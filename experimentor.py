@@ -347,8 +347,8 @@ idx = X_SIZE//2  # Index of the window tracker for the density
 
 plt.title("boundary mask")
 plt.imshow(boundary_mask[X_SIZE//2,:, :])
-plt.show()
-exit()
+# plt.show()
+# exit()
 
 eq = CustomPDE(bc=[bc_x, bc_y, bc_z], bc_vec=[bc_x, bc_y, bc_z], bc_density=[bc_x_density, bc_y_density, bc_z_density], boundary_mask=boundary_mask)
 
@@ -378,6 +378,7 @@ print("Execution Time: ", end_time - start_time, " seconds")
 
 os.makedirs("results/raw_data", exist_ok=True)
 np.save(f"results/raw_data/{LOG_NAME}.npy", storage.data)
+np.save(f"results/raw_data/{LOG_NAME}_dm_dt.npy", data_tracker.data)
 
 plot_2d_scalar_slice(result[1].data, "density")
 plot_2d_scalar_slice(np.linalg.norm(result[0].data, axis=0), "velocity-magnitude")
