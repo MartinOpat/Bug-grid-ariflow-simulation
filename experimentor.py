@@ -42,6 +42,8 @@ class CustomPDE(pde.PDEBase):
         self.gradient_u = None
         self.gradient_u_2 = None
 
+        self.check_implementation = False
+
     def evolution_rate(self, states, t=0):
         state, density = states
 
@@ -60,7 +62,9 @@ class CustomPDE(pde.PDEBase):
 
         artificial_viscosity = self.artificial_viscosity_coefficient * state.laplace(bc=self.bc_vec)
         ans += artificial_viscosity
-        ans.data[0, ~self.boundary_mask] += 0.1
+        # ans.data[0, ~self.boundary_mask] += 0.1
+        ans.data[0, ~self.boundary_mask] += np.random.normal(loc=0.1, scale=0.01, size=ans.data[0, ~self.boundary_mask].shape)
+
 
         # ans.data[:, self.boundary_mask] = 0
         density_derivative = -(state*density).divergence(bc=self.bc_density)
@@ -174,7 +178,11 @@ class CustomPDE(pde.PDEBase):
             ans = -f_u - multiply_scalar_vector_field(1/state_density_data, gradient_p_u(pressure))
 
             ans += state_lapacian*artificial_viscosity_coefficient
-            apply_force_to_x(ans, 0.1)
+
+
+            # apply_force_to_x(ans, 0.1)
+            force = np.random.normal(loc=0.1, scale=0.01)
+            apply_force_to_x(ans, force)
 
             apply_boundary_mask(ans, boundary_mask)
 
@@ -316,26 +324,31 @@ x, y, z = grid.cell_coords[..., 0], grid.cell_coords[..., 1], grid.cell_coords[.
 hole_count = int(get_required_env_var("HOLE_COUNT"))
 hole_width = float(get_required_env_var("HOLE_WIDTH"))
 
-empty_space = hole_count*hole_width
+if hole_count != 1:
+    empty_space = hole_count*hole_width
 
-assert 0 <= empty_space <= 5, "Invalid parameters for boundary mask. There is more hole than the total height of the tunnel."
-assert 1 <= hole_count <= Y_SIZE//2-1, "Invalid parameters for boundary mask. There needs to be atleast one hole and no more than twice the resolution."
-assert hole_width >= 5/Y_SIZE, "Invalid parameters for boundary mask. The hole width must be atleast one grid cell wide."
+    assert 0 <= empty_space <= 5, "Invalid parameters for boundary mask. There is more hole than the total height of the tunnel."
+    assert 1 <= hole_count <= Y_SIZE//2-1, "Invalid parameters for boundary mask. There needs to be atleast one hole and no more than twice the resolution."
+    assert hole_width >= 5/Y_SIZE, "Invalid parameters for boundary mask. The hole width must be atleast one grid cell wide."
 
-blocked_space = 5 - empty_space
-blocked_count = hole_count - 1
-blocked_width = blocked_space/blocked_count
-y_mask = hole_width < y % (blocked_width + hole_width) 
+    blocked_space = 5 - empty_space
+    blocked_count = hole_count - 1
+    blocked_width = blocked_space/blocked_count
+    y_mask = hole_width < y % (blocked_width + hole_width) 
 
-x_mask = (x >= 4.9) & (x <= 5.1)
+    x_mask = (x >= 4.9) & (x <= 5.1)
 
-boundary_mask = y_mask & x_mask
+    boundary_mask = y_mask & x_mask
+else:
+    # Empty window -> boundary mask is false everywhere
+    boundary_mask = np.zeros((X_SIZE, Y_SIZE, Z_SIZE), dtype=np.bool_)
 
 idx = X_SIZE//2  # Index of the window tracker for the density
 
 plt.title("boundary mask")
 plt.imshow(boundary_mask[X_SIZE//2,:, :])
-# plt.show()
+plt.show()
+exit()
 
 eq = CustomPDE(bc=[bc_x, bc_y, bc_z], bc_vec=[bc_x, bc_y, bc_z], bc_density=[bc_x_density, bc_y_density, bc_z_density], boundary_mask=boundary_mask)
 
