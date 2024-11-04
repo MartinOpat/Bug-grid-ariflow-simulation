@@ -1,0 +1,34 @@
+
+
+\subsection*{Raw measured data} \label{subsection: raw measured data}
+\addcontentsline{toc}{subsection}{Raw measured data}
+% Large data = no tables cause they are too big
+The data gathered during the measurements is too large to be included in this document. However, the raw data is available upon request or can be found in the measurements branch in the repository of this project: \url{https://github.com/MartinOpat/Lagrangian-fluid-simulation-for-Android/tree/measurements} % TODO: Make the repository public
+
+\subsection*{Processed data} \label{subsection: processed data}
+\addcontentsline{toc}{subsection}{Processed data}
+Similarly to the raw data, the processed data can be requested or found in the measurements branch in the repository of this project: \url{https://github.com/MartinOpat/Lagrangian-fluid-simulation-for-Android/tree/measurements}
+% TODO: Update the folder names
+
+
+\subsection*{Error Analysis} \label{subsection: error analysis}
+\addcontentsline{toc}{subsection}{Error Analysis}
+
+This section outlines the error analysis formulas used during data processing. For further detail, see \cite{errorAnalysisBook}.
+\subsubsection*{Error Propagation} \label{subsubsection: error propagation}
+For error propagation, Gauss’ Law of Error Propagation was used:
+\begin{equation}
+    \Delta f(x_1, x_2, ..., x_n) = \sqrt{\left(\frac{\partial f}{\partial x_1}\Delta x_1\right)^2 + \left(\frac{\partial f}{\partial x_2}\Delta x_2\right)^2 + ... + \left(\frac{\partial f}{\partial x_n}\Delta x_n\right)^2}
+\end{equation}
+where $f$ is the function of the variables $x_1, x_2, ..., x_n$, and $\Delta x_1, \Delta x_2, ..., \Delta x_n$ are the errors in the variables $x_1, x_2, ..., x_n$ respectively.
+
+\subsubsection*{Standard Error in the Mean} \label{subsubsection: standard error in the mean}
+The standard error in the mean was calculated using the following formula:
+\begin{gather}
+    \text{Standard deviation}:~\sigma = \sqrt{\frac{\sum_{i=1}^{n}(x_i - \mu)^2}{n}} \\
+    \text{Standard error in the mean:}~\text{SE} = \frac{\sigma}{\sqrt{n}}
+\end{gather}
+where $n$ is the number of measurements, $x_i$ is the $i$-th measurement, and $\mu$ is the arithmetic mean of all the measurements.
+
+
+\printnoidxglossaries

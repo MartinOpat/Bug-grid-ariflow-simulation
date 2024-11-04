@@ -1,0 +1,60 @@
+
+% Sets 1
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\B}{\mathbb{B}}
+
+% Sets 2
+\newcommand{\Max}[1]{\mathsf{Max}\big\{#1\big\}~}
+\newcommand{\Min}[1]{\mathsf{Min}\big\{#1\big\}~}
+\newcommand{\no}[1]{\#\big\{#1\big\}}
+
+% Puts text into a double box
+\newcommand{\doubleboxed}{
+    \begin{center}
+        \fbox{\fbox{\parbox{5.9in}{\centering
+        {\large
+            \textbf{Data transmission: internet connections from server to the home (optical fiber, ADSL, cable) - 2 page summary} \\}}}
+        }
+    \end{center}
+}
+
+% Vectors
+\newcommand{\ivec}{\boldsymbol{~\hat\imath}}
+\newcommand{\jvec}{\boldsymbol{~\hat\jmath}}
+\newcommand{\kvec}{\boldsymbol{~\hat k}}
+\newcommand{\vecSpan}[1]{\text{Span} \left\{ #1 \right\}}
+\newcommand{\vect}[1]{\mathbf{#1}}
+% \newcommand{\mvect}[1]{\overset{\rightharpoonup}{#1}}
+% \newcommand{\vect}[1]{$\mvect{#1}$}
+% \newcommand{\vect}[1]{$\mvect{#1}$}
+\newcommand{\rwhat}[1]{%
+\savestack{\tmpbox}{\stretchto{%
+  \scaleto{%
+    \scalerel*[\widthof{\ensuremath{#1}}]{\kern.1pt\mathchar"0362\kern.1pt}%
+    {\rule{0ex}{\textheight}}%WIDTH-LIMITED CIRCUMFLEX
+  }{\textheight}% 
+}{2.4ex}}%
+\stackon[-6.9pt]{#1}{\tmpbox}%
+}
+
+% Matrices
+\newcommand{\adj}[1][]{\text{adj}~#1}
+\newcommand{\rank}[1][]{\text{rank}~#1}
+\newcommand{\dimension}[1][]{\text{dim}~#1}
+\newcommand{\nullspace}[1]{\mathcal{N} \left( #1 \right)}
+
+% Renaming inbuild
+\newcommand{\ol}[1]{\overline{#1}}
+\newcommand{\del}{\partial}
+
+
+% Other
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\Lagr}{\mathcal{L}}
+\newcommand{\paraend}{\vspace{0.5cm}}
+\newcommand{\weirdparaend}{\vspace{0.0cm}}
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
