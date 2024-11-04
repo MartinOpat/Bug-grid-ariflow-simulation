@@ -1,13 +1,13 @@
 # Fdb version 3
-["biber main"] 1730737421 "main.bcf" "main.bbl" "main" 1730738885
-  "main.bcf" 1730738885 106469 c4e15220a7c25aec2b751d4b8230e6ce "pdflatex"
+["biber main"] 1730737421 "main.bcf" "main.bbl" "main" 1730738951
+  "main.bcf" 1730738951 106469 c4e15220a7c25aec2b751d4b8230e6ce "pdflatex"
   "references.bib" 1730727272 689 52ada2c30c13197a994057b8546db785 ""
   (generated)
   "main.bbl"
   "main.blg"
-["pdflatex"] 1730738883 "/home/martin/UniversityMaterials/MS/MS1-1a/m&s/repos/Bug-grid-ariflow-simulation/report/main.tex" "main.pdf" "main" 1730738885
+["pdflatex"] 1730738949 "/home/martin/UniversityMaterials/MS/MS1-1a/m&s/repos/Bug-grid-ariflow-simulation/report/main.tex" "main.pdf" "main" 1730738951
   "/etc/texmf/web2c/texmf.cnf" 1713268587 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/martin/UniversityMaterials/MS/MS1-1a/m&s/repos/Bug-grid-ariflow-simulation/report/main.tex" 1730727900 2472 d8774fa1fa6be0252128e80b480515c6 ""
+  "/home/martin/UniversityMaterials/MS/MS1-1a/m&s/repos/Bug-grid-ariflow-simulation/report/main.tex" 1730738947 2458 e38ba088373283499f614e36fb890cef ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/tcrm1200.tfm" 1136768653 1536 74b7293ec3713bb7fdca8dd1bd1f469c ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1246382020 1004 54797486969f23fa377b128694d548df ""
@@ -199,18 +199,19 @@
   "figures/fse.png" 1730725785 33424 91642bd1c93890361fa69de065d70c3c ""
   "figures/mosquitogrid.jpg" 1730724822 1122365 2daead8217addf7aa6d5d7189f6957ad ""
   "glossary.tex" 1730725785 4284 5aa4e44ded5c8d4c9a11f4687e1c76ae ""
-  "main.aux" 1730738885 4025 ca9f026ad6468f063cf0e94ee9e226b0 "pdflatex"
+  "main.aux" 1730738951 4315 8e709f82519bf4445c5064b0da4b2565 "pdflatex"
   "main.bbl" 1730737423 1638 599fa54a126ea986025af9423e0a9f21 "biber main"
-  "main.out" 1730738885 967 9b800c54da61b3415b7dffa75a9fca5a "pdflatex"
-  "main.run.xml" 1730738885 2402 7c866ed2192e71c57464ed4279aadefa "pdflatex"
-  "main.tex" 1730727900 2472 d8774fa1fa6be0252128e80b480515c6 ""
-  "main.toc" 1730738885 633 9ad87e531c4a552727d77b13d79006b1 "pdflatex"
+  "main.out" 1730738951 1020 9981ff09a6662054782b135b013173d4 "pdflatex"
+  "main.run.xml" 1730738951 2402 7c866ed2192e71c57464ed4279aadefa "pdflatex"
+  "main.tex" 1730738947 2458 e38ba088373283499f614e36fb890cef ""
+  "main.toc" 1730738951 715 5b64934e6d2191d912b3ebe218ee0c2d "pdflatex"
+  "sections/appendixA.tex" 1730725785 5984 f9b7dbfdfa27dab3f923ca63947599fa ""
   "sections/conclusion.tex" 1730727591 48 dcdc601ee8a8e1f3f49f78137e5aac9a ""
   "sections/discussion.tex" 1730738809 1282 a39fffcc5bf90d46f0419b441f8440a2 ""
   "sections/implementation.tex" 1730737742 440 1b375cb382dd817ba134a363ebdbe52c ""
   "sections/intro_motiv.tex" 1730731694 2171 2ae6041ecc3a5b8920636ac80a3fe366 ""
   "sections/methods.tex" 1730736931 5714 7e15631ea5e7bfb16ad962781c74e511 ""
-  "sections/results.tex" 1730738883 1857 eef8382fda05f19f7be5edc5db2bdf84 ""
+  "sections/results.tex" 1730738905 1857 eef8382fda05f19f7be5edc5db2bdf84 ""
   "sources/customFunctions.tex" 1730725785 1768 7fccdabbc9640d35a8d4a0accfbee35b ""
   "sources/packages.tex" 1730727851 2439 8788031f7312ec5677247b500a180f7c ""
   (generated)
