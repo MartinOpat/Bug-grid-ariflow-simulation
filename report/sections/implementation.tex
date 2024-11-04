@@ -1,7 +1,1 @@
 \section{Simulation setup} \label{section: implementation}
-There are two ways of approaching the numerical simulation of the equations above:
-\begin{enumerate}
-    \item Giving eq. (\ref{eq: NS-cont-final}) into a PDE solver
-    \item Implement and perform a numerical integration using eq. (\ref{eq: NS-fd})
-\end{enumerate}
-Option 1. is the preferred option, assuming a PDE-solve Python package exists that can accommodate eqs. (\ref{eq: NS-fd}) and (\ref{eq: no_slip_boundary}). Option 2. is a backup option, and will only be used if no existing package fits our criteria well enough.
