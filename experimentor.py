@@ -353,9 +353,9 @@ plt.imshow(boundary_mask[X_SIZE//2,:, :])
 window_blocked = np.sum(boundary_mask[X_SIZE//2,:, :]) / Y_SIZE
 print("Window blocked: ", window_blocked)
 os.makedirs("results/window_blocked", exist_ok=True)
-np.save(f"results/window_blocked/{LOG_NAME}.npy", window_blocked)
+# np.save(f"results/window_blocked/{LOG_NAME}.npy", window_blocked)
 
-exit()
+# exit()
 
 eq = CustomPDE(bc=[bc_x, bc_y, bc_z], bc_vec=[bc_x, bc_y, bc_z], bc_density=[bc_x_density, bc_y_density, bc_z_density], boundary_mask=boundary_mask)
 
@@ -372,7 +372,7 @@ def get_statistics(states, time):
 data_tracker_interval = 0.1
 data_tracker = pde.DataTracker(get_statistics, interval=data_tracker_interval)
 
-result = eq.solve(field, t_range=60, dt=1e-2, adaptive=True, tracker=[
+result = eq.solve(field, t_range=60, dt=1e-2, scheme="euler", adaptive=True, tracker=[
     storage.tracker(),
     pde.ProgressTracker(),
     LivePlotTracker2(),
