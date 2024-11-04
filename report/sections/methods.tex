@@ -49,20 +49,20 @@ where $f(\vect{u})$ is a function of $\vect{u}$ and its spatial (partial) deriva
 \begin{gather}
     \partial_t \vect{u}  = -f(\vect{u}) -{\frac {1}{\rho }}\nabla p +\vect{f} \label{eq: NS-cont-final}
 \end{gather}
-Applying the finite difference method % TODO: Cite
+Applying the finite difference method \cite{landau2015computational}
 to the time derivative in eq. \ref{eq: NS-cont-final}, we get:
 \begin{gather}
     \frac{\vect{u}_{ijk}^{n+1} - \vect{u}_{ijk}^n}{\Delta t} = -f(\vect{u}^n) -{\frac {1}{\rho }}\nabla p+\vect{f} \\
     \vect{u}_{ijk}^{n+1} = \vect{u}_{ijk}^n - \Delta t \left(f(\vect{u}^n) + {\frac {1}{\rho }}\nabla p + \vect{f}\right), \label{eq: NS-fd}
 \end{gather}
-where $\Delta t$ is the discrete time-step size, $n$ is the time-step index, and $i,j,~\text{and}~k$ are the indices in the $x,y,~\text{and}~z$ spatial coordinates respectively. We can apply the finite difference method to all the (spatial) derivatives in $f$ in the same way as we did above. Final, to relate the density field to the pressure of the fluid, we use the equation of state for an ideal gas: % TODO: Cite
+where $\Delta t$ is the discrete time-step size, $n$ is the time-step index, and $i,j,~\text{and}~k$ are the indices in the $x,y,~\text{and}~z$ spatial coordinates respectively. We can apply the finite difference method to all the (spatial) derivatives in $f$ in the same way as we did above. Final, to relate the density field to the pressure of the fluid, we use the equation of state for an ideal gas \cite{thermalBook}: 
 \begin{gather}
     p = \rho R T.
 \end{gather}
 \\
 
-For time integration, the forward Euler method % TODO: Cite
-was used. The motivation of this choice was the computational simplicity of the method. The forward Euler method is a first-order method, and is known to be numerically unstable % TODO: cite
+For time integration, the forward Euler method
+was used \cite{landau2015computational}. The motivation of this choice was the computational simplicity of the method. The forward Euler method is a first-order method, and is known to be numerically unstable \cite{landau2015computational}
 for large values of the time-step size. This limitation was counteracted by using an adaptive time-step size, so that the time-step size was reduced when the simulation was close to a critical point. \\
 
 The above model captures the essential physics of a flow of compressible fluid in a rectangular box. Since, the fluid is compressible, the model can be used to simulate a wide range of fluid flows, e.g., linear, turbulent, and chaotic flows.

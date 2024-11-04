@@ -19,6 +19,37 @@
 
 \refsection{0}
   \datalist[entry]{none/global//global/global}
+    \entry{landau2015computational}{book}{}
+      \name{author}{2}{}{%
+        {{hash=3edeebf7f1eb1d1193bde49cc9f07554}{%
+           family={Landau},
+           familyi={L\bibinitperiod},
+           given={Rubin\bibnamedelima H.},
+           giveni={R\bibinitperiod\bibinitdelim H\bibinitperiod}}}%
+        {{hash=a3df2e88aca7261a9608da39f638274f}{%
+           family={Bordeianu},
+           familyi={B\bibinitperiod},
+           given={Cristian\bibnamedelima C.},
+           giveni={C\bibinitperiod\bibinitdelim C\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {John Wiley \& Sons}%
+      }
+      \strng{namehash}{a1c3d117dafe58f52b08408bede16b31}
+      \strng{fullhash}{a1c3d117dafe58f52b08408bede16b31}
+      \strng{bibnamehash}{a1c3d117dafe58f52b08408bede16b31}
+      \strng{authorbibnamehash}{a1c3d117dafe58f52b08408bede16b31}
+      \strng{authornamehash}{a1c3d117dafe58f52b08408bede16b31}
+      \strng{authorfullhash}{a1c3d117dafe58f52b08408bede16b31}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Computational Physics: Problem Solving with Python}
+      \field{year}{2015}
+      \field{pages}{86\bibrangedash 87\bibrangessep 177\bibrangedash 178}
+      \range{pages}{4}
+    \endentry
     \entry{batchelor2000introduction}{book}{}
       \name{author}{1}{}{%
         {{hash=ba272ba75613215597f738aedebec3d4}{%
@@ -36,14 +67,50 @@
       \strng{authorbibnamehash}{ba272ba75613215597f738aedebec3d4}
       \strng{authornamehash}{ba272ba75613215597f738aedebec3d4}
       \strng{authorfullhash}{ba272ba75613215597f738aedebec3d4}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{An introduction to fluid dynamics}
       \field{year}{2000}
       \field{pages}{131\bibrangedash 170}
       \range{pages}{40}
+    \endentry
+    \entry{thermalBook}{book}{}
+      \name{author}{2}{}{%
+        {{hash=9cb4aa188ac98c095c36bc003373c966}{%
+           family={Blundell},
+           familyi={B\bibinitperiod},
+           given={Stephen\bibnamedelima J.},
+           giveni={S\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=6056f028270da130d2a898ca72e9c515}{%
+           family={Blundell},
+           familyi={B\bibinitperiod},
+           given={Katherine\bibnamedelima M.},
+           giveni={K\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Oxford University Press}%
+      }
+      \strng{namehash}{952ff359a058606d86bf695861b2df5c}
+      \strng{fullhash}{952ff359a058606d86bf695861b2df5c}
+      \strng{bibnamehash}{952ff359a058606d86bf695861b2df5c}
+      \strng{authorbibnamehash}{952ff359a058606d86bf695861b2df5c}
+      \strng{authornamehash}{952ff359a058606d86bf695861b2df5c}
+      \strng{authorfullhash}{952ff359a058606d86bf695861b2df5c}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{isbn}{9780199562091}
+      \field{month}{10}
+      \field{title}{{Concepts in Thermal Physics}}
+      \field{year}{2009}
+      \field{pages}{6\bibrangedash 7}
+      \range{pages}{2}
+      \verb{doi}
+      \verb 10.1093/acprof:oso/9780199562091.001.0001
+      \endverb
     \endentry
   \enddatalist
 \endrefsection

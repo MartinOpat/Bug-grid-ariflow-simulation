@@ -2348,8 +2348,15 @@
     <bcf:datasource type="file" datatype="bibtex" glob="false">references.bib</bcf:datasource>
   </bcf:bibdata>
   <bcf:section number="0">
-    <bcf:citekey order="1">batchelor2000introduction</bcf:citekey>
+    <bcf:citekey order="1">landau2015computational</bcf:citekey>
     <bcf:citekey order="2">batchelor2000introduction</bcf:citekey>
+    <bcf:citekey order="3">landau2015computational</bcf:citekey>
+    <bcf:citekey order="4">thermalBook</bcf:citekey>
+    <bcf:citekey order="5">landau2015computational</bcf:citekey>
+    <bcf:citekey order="6">landau2015computational</bcf:citekey>
+    <bcf:citekey order="7">landau2015computational</bcf:citekey>
+    <bcf:citekey order="8">batchelor2000introduction</bcf:citekey>
+    <bcf:citekey order="9">thermalBook</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">
