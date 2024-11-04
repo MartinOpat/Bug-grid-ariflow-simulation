@@ -41,24 +41,23 @@ The assumptions listed above yield the Navier-Stokes equation(s) \cite{batchelor
 {\left(\partial_t +\mathbf {u} \cdot \nabla -\frac{\mu}{\rho} \,\nabla ^{2}-\left(\frac{\mu}{3\rho} +\frac{\zeta}{\rho} \right)\,\nabla (\nabla \cdot )\right)\mathbf {u} =-{\frac {1}{\rho }}\nabla p+\mathbf {f} ,}
 \end{equation}
 
-where $\rho$ is the mass density, $\vect{u}$ is velocity, $p$ is the pressure, $\mu$ is a dynamic viscosity, $\zeta$ is the bulk viscosity, and $\vect{f}$ is the body force (which is 0 due to isotropy).
+where $\rho$ is the mass density, $\vect{u}$ is velocity, $p$ is the pressure, $\mu$ is a dynamic viscosity, $\zeta$ is the bulk viscosity, and $\vect{f}$ is the source term.
 Further "massaging" the equation:
 \begin{gather}
-    \partial_t \vect {u} + \underbrace{(\mathbf {u} \cdot \nabla) \vect {u} -\frac{\mu}{\rho} \,\nabla ^{2}\vect {u}-\left(\frac{\mu}{3\rho} +\frac{\zeta}{\rho} \right)\,\nabla (\nabla \cdot \vect {u})}_{f\left(\vect{u}\right)} =-{\frac {1}{\rho }}\nabla p,
+    \partial_t \vect {u} + \underbrace{(\mathbf {u} \cdot \nabla) \vect {u} -\frac{\mu}{\rho} \,\nabla ^{2}\vect {u}-\left(\frac{\mu}{3\rho} +\frac{\zeta}{\rho} \right)\,\nabla (\nabla \cdot \vect {u})}_{f\left(\vect{u}\right)} =-{\frac {1}{\rho }}\nabla p + \vect {f} ,
 \end{gather}
 where $f(\vect{u})$ is a function of $\vect{u}$ and its spatial (partial) derivatives.
 \begin{gather}
-    % \partial_t \vect{u} + f(\vect{u}) = -{\frac {1}{\rho }}\nabla p \\
-    \partial_t \vect{u}  = -f(\vect{u}) -{\frac {1}{\rho }}\nabla p \label{eq: NS-cont-final}
+    \partial_t \vect{u}  = -f(\vect{u}) -{\frac {1}{\rho }}\nabla p +\vect{f} \label{eq: NS-cont-final}
 \end{gather}
-Applying the finite difference method to the time derivative in eq. \ref{eq: NS-cont-final}, we get:
+Applying the finite difference method % TODO: Cite
+to the time derivative in eq. \ref{eq: NS-cont-final}, we get:
 \begin{gather}
-    \frac{\vect{u}_{ijk}^{n+1} - \vect{u}_{ijk}^n}{\Delta t} = -f(\vect{u}^n) -{\frac {1}{\rho }}\nabla p \\
-    \vect{u}_{ijk}^{n+1} = \vect{u}_{ijk}^n - \Delta t \left(f(\vect{u}^n) + {\frac {1}{\rho }}\nabla p\right), \label{eq: NS-fd}
+    \frac{\vect{u}_{ijk}^{n+1} - \vect{u}_{ijk}^n}{\Delta t} = -f(\vect{u}^n) -{\frac {1}{\rho }}\nabla p+\vect{f} \\
+    \vect{u}_{ijk}^{n+1} = \vect{u}_{ijk}^n - \Delta t \left(f(\vect{u}^n) + {\frac {1}{\rho }}\nabla p + \vect{f}\right), \label{eq: NS-fd}
 \end{gather}
-where $\Delta t$ is the discrete time-step size, $n$ is the time-step index, and $i,j,~\text{and}~k$ are the indices in the $x,y,~\text{and}~z$ spatial coordinates respectively. We can apply the finite difference method to all the (spatial) derivatives in $f$ in the same way as we did above.
+where $\Delta t$ is the discrete time-step size, $n$ is the time-step index, and $i,j,~\text{and}~k$ are the indices in the $x,y,~\text{and}~z$ spatial coordinates respectively. We can apply the finite difference method to all the (spatial) derivatives in $f$ in the same way as we did above. \\
 
-% We also impose the no-slip boundary condition at the location of the rectangular bug grid, as well as on the walls around the window:
-% \begin{gather}
-%     \forall i,j,k \in [\text{grid},~\text{window}] ~\forall n:~ \vect{u}_{ijk}^n = \vect{0} \label{eq: no_slip_boundary}
-% \end{gather}
+For time integration, the forward Euler method % TODO: Cite
+was used. The motivation of this choice was the computational simplicity of the method. The forward Euler method is a first-order method, and is known to be numerically unstable % TODO: cite
+for large values of the time-step size. This limitation was counteracted by using an adaptive time-step size, so that the time-step size was reduced when the simulation was close to a critical point.
