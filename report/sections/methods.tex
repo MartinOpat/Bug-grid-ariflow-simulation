@@ -1,28 +1,50 @@
 \section{Model and Methodology} \label{section: methods}
-We aim to implement a numerical 3D simulation of airflow based on Navier-Stokes equations in Python. The numerical simulation will include discretising space and time. The cells that make up the bug grid will be modelled using a no-slip boundary condition.
+In this report, we implement a numerical simulation of airflow based on Navier-Stokes equations. The choice of the implementation language is Python for its simplicity, and the availability of libraries such as NumPy, Matplotlib, and Py-PDE.
 
-\subsection{Assumptions:}
+\subsection{Model}
+We simulated a simplistic model of a compressible fluid flow in a rectangular box of size $X \times Y \times Z,~X>Y,Z$. The window was located at the center of the box, and was aligned to be parallel with its short sides (the ones within the $Y$-$Z$ plane). \\
+
+The fluid inside the box was driven by a source term $F$ emulating a pressure-driven channel flow. The values of the source term was drawn at each time step from a normal distribution with a constant positive mean and a small standard deviation, in order to simulate microscopic fluctuations in the flow. The source term was applied to the entire fluid domain, but not to the boundary cells. \\
+
+The physical fields were used in the simulation to represent the fluid. A vector field of the fluid velocity $\vect{u}(x,y,z,t)$, and a scalar field of the density $\rho(x,y,z,t)$. The velocity field was initialized with a constant value of zero everywhere, while the density field was randomly drawn from a normal distribution with a constant mean and a small standard deviation. A periodic boundary conditions:
+\begin{gather}
+    \vect{v}(0,y,z,t) = \vect{v}(X,y,z,t), \\
+    \rho(0,y,z,t) = \rho(X,y,z,t)
+\end{gather}
+was applied to the short side parallel with the window, while no-slip boundary conditions:
+\begin{gather}
+    \forall x_b,y_b,z_b \in [\text{long sides},~\text{window}]:~ \vect{v}(x_b,y_b,z_b, t) = \vect{0}\\
+    \forall x_b,y_b,z_b \in [\text{long sides},~\text{window}]:~ \rho(x_b,y_b,z_b, t) = 0\\
+\end{gather}
+
+were applied to the window and the other (long) sides. Additionally, the Neumann boundary condition:
+\begin{gather}
+    \forall x_b,y_b,z_b \in [\text{long sides}]:~\partial_n \vect{v}(x_b,y_b,z_b, t) = 0 \\
+    \forall x_b,y_b,z_b \in [\text{long sides}]:~\partial_n \rho(x_b,y_b,z_b, t) = 0
+\end{gather}
+was also applied to the long sides of the box. $\partial_n$ denotes the partial derivative in outward normal direction. \\
+
+
+The following list of physical assumptions were made on the fluid flow:
 \begin{multicols}{2}
 \begin{enumerate}
     \item Mass conservation
     \item Isotropy (i.e., no gravity)
     \item Compressible fluid
-    \item Dynamic ($\mu$) and bulk ($\zeta$) viscosities are uniform in space
-    \item Stoke's hypothesis ($\zeta=0$)
     \item Newtonian fluid
 \end{enumerate}
 \end{multicols}
 
-\subsection{Math}
-The assumptions above yield the Navier-Stokes equation(s) \cite{batchelor2000introduction} in the following form:
+\subsection{Mathematical derivation of the model}
+The assumptions listed above yield the Navier-Stokes equation(s) \cite{batchelor2000introduction} in the following form:
 \begin{equation}
-{\left(\partial_t +\mathbf {u} \cdot \nabla -\nu \,\nabla ^{2}-({\tfrac {1}{3}}\nu +\xi )\,\nabla (\nabla \cdot )\right)\mathbf {u} =-{\frac {1}{\rho }}\nabla p+\mathbf {f} ,}
+{\left(\partial_t +\mathbf {u} \cdot \nabla -\frac{\mu}{\rho} \,\nabla ^{2}-\left(\frac{\mu}{3\rho} +\frac{\zeta}{\rho} \right)\,\nabla (\nabla \cdot )\right)\mathbf {u} =-{\frac {1}{\rho }}\nabla p+\mathbf {f} ,}
 \end{equation}
 
-where $\rho$ is the mass density, $\vect{u}$ is velocity, $p$ is the pressure, $\nu$ is a shear kinematic viscosity parameter, $\xi$ is the bulk kinematic viscosity, and $\vect{f}$ is the body force (which is 0 due to isotropy).
+where $\rho$ is the mass density, $\vect{u}$ is velocity, $p$ is the pressure, $\mu$ is a dynamic viscosity, $\zeta$ is the bulk viscosity, and $\vect{f}$ is the body force (which is 0 due to isotropy).
 Further "massaging" the equation:
 \begin{gather}
-    \partial_t \vect {u} + \underbrace{(\mathbf {u} \cdot \nabla) \vect {u} -\nu \,\nabla ^{2}\vect {u}-({\tfrac {1}{3}}\nu +\xi )\,\nabla (\nabla \cdot \vect {u})}_{f\left(\vect{u}\right)} =-{\frac {1}{\rho }}\nabla p,
+    \partial_t \vect {u} + \underbrace{(\mathbf {u} \cdot \nabla) \vect {u} -\frac{\mu}{\rho} \,\nabla ^{2}\vect {u}-\left(\frac{\mu}{3\rho} +\frac{\zeta}{\rho} \right)\,\nabla (\nabla \cdot \vect {u})}_{f\left(\vect{u}\right)} =-{\frac {1}{\rho }}\nabla p,
 \end{gather}
 where $f(\vect{u})$ is a function of $\vect{u}$ and its spatial (partial) derivatives.
 \begin{gather}
@@ -36,7 +58,7 @@ Applying the finite difference method to the time derivative in eq. \ref{eq: NS-
 \end{gather}
 where $\Delta t$ is the discrete time-step size, $n$ is the time-step index, and $i,j,~\text{and}~k$ are the indices in the $x,y,~\text{and}~z$ spatial coordinates respectively. We can apply the finite difference method to all the (spatial) derivatives in $f$ in the same way as we did above.
 
-We also impose the no-slip boundary condition at the location of the rectangular bug grid, as well as on the walls around the window:
-\begin{gather}
-    \forall i,j,k \in [\text{grid},~\text{window}] ~\forall n:~ \vect{u}_{ijk}^n = \vect{0} \label{eq: boundary}
-\end{gather}
+% We also impose the no-slip boundary condition at the location of the rectangular bug grid, as well as on the walls around the window:
+% \begin{gather}
+%     \forall i,j,k \in [\text{grid},~\text{window}] ~\forall n:~ \vect{u}_{ijk}^n = \vect{0} \label{eq: no_slip_boundary}
+% \end{gather}
