@@ -6,7 +6,12 @@
 \caption{Anti-bug grid (\href{https://www.flickr.com/photos/neekohfi/7817306994/}{Flickr.com})}\
 \end{wrapfigure}
 
-Bug grids can be placed over open windows to allow air to flow through without letting bugs into someone's house. Presumably, when people open their windows, they want air to flow through their house. However, the installation of the grid decreases the functional cross-sectional area of the window, which might decrease the airflow. If the properties of the grid cause the flow to become turbulent, the reduction in airflow would be more drastic, than due to the reduction in the cross-sectional area alone. Using a fluid simulation, this report aims to capture this phenomenon, and investigate how the grid's thickness and density affect the airflow through a window. In doing so, an investigation into the optimal parameters of the grid that maximise airflow while "keeping the bugs out" will be conducted. 
+Bug grids can be placed over open windows to allow air to flow through without letting bugs into someone's house. Presumably, when people open their windows, they want air to flow through their house. However, the installation of the grid decreases the functional cross-sectional area of the window, which might decrease the airflow. If the properties of the grid cause the flow to become turbulent, the reduction in airflow would be more drastic, than due to the reduction in the cross-sectional area alone. Using a fluid simulation, this report aims to capture this phenomenon, and investigate how the grid's thickness and density affect the airflow through a window. \\
+
+To achieve this goal, a numerical simulation of airflow based on the Navier-Stokes equations will be implemented in Python. The numerical simulation will include discretising both space and time. The time discretisation will be done using the Euler method % TODO: Cite
+, and the space discretisation will be done using the finite difference method. \\ % TODO: Cite
+
+In doing so, an investigation into the optimal parameters of the grid that maximise airflow while "keeping the bugs out" will be conducted. Additionally, the applicability and flexibility of fluid simulations in modelling real-world phenomena will be demonstrated. Namely, the numerical stability, and the computational efficiency of the simulation model will be discussed. \\
 
 
 \subsection{Research question}
