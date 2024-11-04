@@ -18,7 +18,7 @@ def get_required_env_var(var_name):
 LOG_NAME = get_required_env_var("LOG_NAME")
 
 X_SIZE = 200 # should be divisible by 2
-Y_SIZE = 100
+Y_SIZE = 200
 Z_SIZE = 1
 
 class CustomPDE(pde.PDEBase):
@@ -347,8 +347,8 @@ idx = X_SIZE//2  # Index of the window tracker for the density
 
 plt.title("boundary mask")
 plt.imshow(boundary_mask[X_SIZE//2,:, :])
-# plt.show()
-# exit()
+plt.show()
+exit()
 
 eq = CustomPDE(bc=[bc_x, bc_y, bc_z], bc_vec=[bc_x, bc_y, bc_z], bc_density=[bc_x_density, bc_y_density, bc_z_density], boundary_mask=boundary_mask)
 
@@ -368,9 +368,9 @@ data_tracker = pde.DataTracker(get_statistics, interval=data_tracker_interval)
 result = eq.solve(field, t_range=60, dt=1e-2, adaptive=True, tracker=[
     storage.tracker(),
     pde.ProgressTracker(),
-    # LivePlotTracker2(),
+    LivePlotTracker2(),
     data_tracker,
-    # LivePlotTrackerVf(),
+    LivePlotTrackerVf(),
     ])
 # result = eq.solve(field, t_range=1, dt=1e-2, adaptive=True)
 end_time = time.time()
