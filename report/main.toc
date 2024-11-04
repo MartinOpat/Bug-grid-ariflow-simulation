@@ -4,6 +4,6 @@
 \contentsline {subsection}{\numberline {2.1}Model}{3}{subsection.2.1}%
 \contentsline {section}{\numberline {3}Simulation setup}{5}{section.3}%
 \contentsline {section}{\numberline {4}Results}{6}{section.4}%
-\contentsline {section}{\numberline {5}Discussion}{7}{section.5}%
-\contentsline {section}{\numberline {6}Conclusion}{8}{section.6}%
-\contentsline {section}{\numberline {7}References}{9}{section.7}%
+\contentsline {section}{\numberline {5}Discussion}{8}{section.5}%
+\contentsline {section}{\numberline {6}Conclusion}{9}{section.6}%
+\contentsline {section}{\numberline {7}References}{10}{section.7}%

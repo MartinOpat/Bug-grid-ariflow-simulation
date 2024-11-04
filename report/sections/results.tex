@@ -1,1 +1,28 @@
 \section{Results} \label{section: results}
+The airflow $Q$ through a cross-sectional area $A$ can be mathematically defined as:
+\begin{gather}
+    Q = \int_A \rho \mathbf{v} \cdot d\mathbf{A} = \frac{dm}{dt}
+\end{gather}
+Then, the total mass $m$ of air that flows through the area in time $T$ is given by:
+\begin{gather}
+    m = \int_0^T Q ~dt
+\end{gather}
+
+The airflow $Q$ was periodically calculated and stored over the duration of the simulation. The plot of $Q$ against the number of holes in the grid was plotted in Figure \ref{fig: flow_rate} for four different hole sizes.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/flux_vs_holes.pdf}
+    \caption{Airflow rate through the cross-sectional area of the window vs. the number of holes in the bug grid, plotted for different grid hole sizes.}
+    \label{fig: flow_rate}
+\end{figure}
+In the left-upper corner of Figure \ref{fig: flow_rate}, the data point corresponding to an empty window is present. Note that this value was constantly the same for all widths of the hole, regardless of its colour in the plot. We can also see, that the airflow through the window increases both with the number of holes and the size of the holes. \\
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/flux_vs_holes_norm.pdf}
+    \caption{Normalized airflow rate through the cross-sectional area of the window vs. the number of holes in the bug grid, plotted for different grid hole sizes.}
+    \label{fig: flow_rate_norm}
+\end{figure}
+Figure \ref{fig: flow_rate_norm} displays the same data as Figure \ref{fig: flow_rate}, but the airflow is normalized to the actual effective area of the window. We can see that the normalized airflow still increases with the size of the holes, however, the number of holes no longer has a significant impact.
+
+

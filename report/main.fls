@@ -1552,6 +1552,16 @@ INPUT ./sections/results.tex
 INPUT sections/results.tex
 INPUT ./sections/results.tex
 INPUT sections/results.tex
+INPUT ./figures/flux_vs_holes.pdf
+INPUT ./figures/flux_vs_holes.pdf
+INPUT figures/flux_vs_holes.pdf
+INPUT ./figures/flux_vs_holes.pdf
+INPUT ./figures/flux_vs_holes.pdf
+INPUT ./figures/flux_vs_holes_norm.pdf
+INPUT ./figures/flux_vs_holes_norm.pdf
+INPUT figures/flux_vs_holes_norm.pdf
+INPUT ./figures/flux_vs_holes_norm.pdf
+INPUT ./figures/flux_vs_holes_norm.pdf
 INPUT ./sections/discussion.tex
 INPUT sections/discussion.tex
 INPUT ./sections/discussion.tex
