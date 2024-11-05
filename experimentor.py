@@ -8,6 +8,9 @@ from scipy.integrate import trapezoid
 import time
 import os
 
+# Set bigger font of all matplotlib fonts
+plt.rcParams.update({"font.size": 18})
+
 def get_required_env_var(var_name):
     """Get the required environment variable or raise an error if not set."""
     try:
@@ -347,8 +350,8 @@ idx = X_SIZE//2  # Index of the window tracker for the density
 
 plt.title("boundary mask")
 plt.imshow(boundary_mask[X_SIZE//2,:, :])
-plt.show()
-exit()
+# plt.show()
+# exit()
 
 
 # Calculate the % of window blocked in the x-y slice of the window
@@ -376,9 +379,9 @@ data_tracker = pde.DataTracker(get_statistics, interval=data_tracker_interval)
 result = eq.solve(field, t_range=60, dt=1e-2, scheme="euler", adaptive=True, tracker=[
     storage.tracker(),
     pde.ProgressTracker(),
-    LivePlotTracker2(),
+    # LivePlotTracker2(),
     data_tracker,
-    LivePlotTrackerVf(),
+    # LivePlotTrackerVf(),
     ])
 # result = eq.solve(field, t_range=1, dt=1e-2, adaptive=True)
 end_time = time.time()
@@ -400,7 +403,9 @@ dm_dts = np.array(dm_dts)
 ts = np.arange(start=0, stop=len(dm_dts)*data_tracker_interval, step=data_tracker_interval)
 
 plt.figure()
-plt.title("dm_dt vs time")
+plt.title("Q vs time")
+plt.xlabel("Time")
+plt.ylabel("Q")
 plt.plot(ts, dm_dts)
 os.makedirs("results/dm_dtOverTime", exist_ok=True)
 plt.savefig(f"results/dm_dtOverTime/{LOG_NAME}.pdf")

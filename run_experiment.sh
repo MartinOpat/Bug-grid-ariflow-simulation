@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Define arrays of values for each parameter
-# hole_counts=(1 3 5 7 10 12)
-hole_counts=(7)
-# hole_widths=(0.1 0.2 0.3 0.4)
-hole_widths=(0.4)
+hole_counts=(1 3 5 7 10 12)
+# hole_counts=(7)
+hole_widths=(0.1 0.2 0.3 0.4)
+# hole_widths=(0.4)
 
 # Loop through each combination of parameters
 for REPEAT in {1..3}; do
