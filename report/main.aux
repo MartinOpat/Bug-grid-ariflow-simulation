@@ -26,7 +26,7 @@
 \abx@aux@segm{0}{0}{landau2015computational}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{2}{section.1}\protected@file@percent }
 \newlabel{section: intro and motiv}{{1}{2}{Introduction}{section.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {1.1}{\ignorespaces Anti-bug grid (\href  {https://www.flickr.com/photos/neekohfi/7817306994/}{Flickr.com})\relax }}{2}{figure.caption.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1.1}{\ignorespaces Bug grid (\href  {https://www.flickr.com/photos/neekohfi/7817306994/}{Flickr.com})\relax }}{2}{figure.caption.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Research question}{2}{subsection.1.1}\protected@file@percent }
 \abx@aux@cite{0}{batchelor2000introduction}
 \abx@aux@segm{0}{0}{batchelor2000introduction}
@@ -47,24 +47,43 @@
 \newlabel{section: implementation}{{3}{5}{Simulation setup}{section.3}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {4}Results}{6}{section.4}\protected@file@percent }
 \newlabel{section: results}{{4}{6}{Results}{section.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.1}{\ignorespaces Airflow rate through the cross-sectional area of the window vs. the number of holes in the bug grid, plotted for different grid hole sizes.\relax }}{6}{figure.caption.2}\protected@file@percent }
+\newlabel{eq: flow_rate}{{4.1}{6}{Results}{equation.4.1}{}}
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{fig: flow_rate}{{4.1}{6}{Airflow rate through the cross-sectional area of the window vs. the number of holes in the bug grid, plotted for different grid hole sizes.\relax }{figure.caption.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.2}{\ignorespaces Normalized airflow rate through the cross-sectional area of the window vs. the number of holes in the bug grid, plotted for different grid hole sizes.\relax }}{7}{figure.caption.3}\protected@file@percent }
-\newlabel{fig: flow_rate_norm}{{4.2}{7}{Normalized airflow rate through the cross-sectional area of the window vs. the number of holes in the bug grid, plotted for different grid hole sizes.\relax }{figure.caption.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Discussion}{8}{section.5}\protected@file@percent }
-\newlabel{section: discussion}{{5}{8}{Discussion}{section.5}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{9}{section.6}\protected@file@percent }
-\newlabel{section: conclusion}{{6}{9}{Conclusion}{section.6}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {7}References}{10}{section.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {Appendix A}\hspace  {1.9cm}}{11}{appendix.A}\protected@file@percent }
-\newlabel{appendix: A}{{Appendix A}{11}{\hspace {1.9cm}}{appendix.A}{}}
-\newlabel{subsection: implemented visualization techniques}{{Appendix A}{11}{}{appendix.A}{}}
-\newlabel{LastPage}{{}{11}{}{page.11}{}}
-\xdef\lastpage@lastpage{11}
-\xdef\lastpage@lastpageHy{11}
+\newlabel{fig: bound1}{{4.1a}{6}{Example of a boundary mask representing a window with a bug grid.\relax }{figure.caption.2}{}}
+\newlabel{sub@fig: bound1}{{a}{6}{Example of a boundary mask representing a window with a bug grid.\relax }{figure.caption.2}{}}
+\newlabel{fig: flowrate1}{{4.1b}{6}{The plot of airflow $Q$ against time.\relax }{figure.caption.2}{}}
+\newlabel{sub@fig: flowrate1}{{b}{6}{The plot of airflow $Q$ against time.\relax }{figure.caption.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.1}{\ignorespaces Comparison of airflow rates through the cross-sectional area of the window for different grid hole sizes.\relax }}{6}{figure.caption.2}\protected@file@percent }
+\newlabel{fig: bound_plos_flowrate1}{{4.1}{6}{Comparison of airflow rates through the cross-sectional area of the window for different grid hole sizes.\relax }{figure.caption.2}{}}
+\newlabel{fig: bound2}{{4.2a}{6}{Example of a boundary mask representing a window with a bug grid.\relax }{figure.caption.3}{}}
+\newlabel{sub@fig: bound2}{{a}{6}{Example of a boundary mask representing a window with a bug grid.\relax }{figure.caption.3}{}}
+\newlabel{fig: flowrate2}{{4.2b}{6}{The plot of airflow $Q$ against time.\relax }{figure.caption.3}{}}
+\newlabel{sub@fig: flowrate2}{{b}{6}{The plot of airflow $Q$ against time.\relax }{figure.caption.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.2}{\ignorespaces Comparison of airflow rates through the cross-sectional area of the window for different grid hole sizes.\relax }}{6}{figure.caption.3}\protected@file@percent }
+\newlabel{fig: bound_plos_flowrate2}{{4.2}{6}{Comparison of airflow rates through the cross-sectional area of the window for different grid hole sizes.\relax }{figure.caption.3}{}}
+\newlabel{fig: bound3}{{4.3a}{7}{Example of a boundary mask representing a window with a bug grid.\relax }{figure.caption.4}{}}
+\newlabel{sub@fig: bound3}{{a}{7}{Example of a boundary mask representing a window with a bug grid.\relax }{figure.caption.4}{}}
+\newlabel{fig: flowrate3}{{4.3b}{7}{The plot of airflow $Q$ against time.\relax }{figure.caption.4}{}}
+\newlabel{sub@fig: flowrate3}{{b}{7}{The plot of airflow $Q$ against time.\relax }{figure.caption.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces Comparison of airflow rates through the cross-sectional area of the window for different grid hole sizes.\relax }}{7}{figure.caption.4}\protected@file@percent }
+\newlabel{fig: bound_plos_flowrate3}{{4.3}{7}{Comparison of airflow rates through the cross-sectional area of the window for different grid hole sizes.\relax }{figure.caption.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.4}{\ignorespaces Total mass $m$ through the cross-sectional area of the window vs. the number of holes in the bug grid, plotted for different grid hole sizes.\relax }}{7}{figure.caption.5}\protected@file@percent }
+\newlabel{fig: flow_rate}{{4.4}{7}{Total mass $m$ through the cross-sectional area of the window vs. the number of holes in the bug grid, plotted for different grid hole sizes.\relax }{figure.caption.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.5}{\ignorespaces Normalized total mass $m$ through the cross-sectional area of the window vs. the number of holes in the bug grid, plotted for different grid hole sizes.\relax }}{8}{figure.caption.6}\protected@file@percent }
+\newlabel{fig: flow_rate_norm}{{4.5}{8}{Normalized total mass $m$ through the cross-sectional area of the window vs. the number of holes in the bug grid, plotted for different grid hole sizes.\relax }{figure.caption.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Discussion}{9}{section.5}\protected@file@percent }
+\newlabel{section: discussion}{{5}{9}{Discussion}{section.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{10}{section.6}\protected@file@percent }
+\newlabel{section: conclusion}{{6}{10}{Conclusion}{section.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}References}{11}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {Appendix A}\hspace  {1.9cm}}{12}{appendix.A}\protected@file@percent }
+\newlabel{appendix: A}{{Appendix A}{12}{\hspace {1.9cm}}{appendix.A}{}}
+\newlabel{subsection: implemented visualization techniques}{{Appendix A}{12}{}{appendix.A}{}}
+\newlabel{LastPage}{{}{12}{}{page.12}{}}
+\xdef\lastpage@lastpage{12}
+\xdef\lastpage@lastpageHy{12}
 \abx@aux@read@bbl@mdfivesum{A005963CDE67CB07E9671769EC947F7A}
 \abx@aux@defaultrefcontext{0}{landau2015computational}{none/global//global/global}
 \abx@aux@defaultrefcontext{0}{batchelor2000introduction}{none/global//global/global}
 \abx@aux@defaultrefcontext{0}{thermalBook}{none/global//global/global}
-\gdef \@abspage@last{12}
+\gdef \@abspage@last{13}

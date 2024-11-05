@@ -347,7 +347,9 @@ idx = X_SIZE//2  # Index of the window tracker for the density
 
 plt.title("boundary mask")
 plt.imshow(boundary_mask[X_SIZE//2,:, :])
-# plt.show()
+plt.show()
+exit()
+
 
 # Calculate the % of window blocked in the x-y slice of the window
 window_blocked = np.sum(boundary_mask[X_SIZE//2,:, :]) / Y_SIZE
@@ -355,7 +357,6 @@ print("Window blocked: ", window_blocked)
 os.makedirs("results/window_blocked", exist_ok=True)
 # np.save(f"results/window_blocked/{LOG_NAME}.npy", window_blocked)
 
-# exit()
 
 eq = CustomPDE(bc=[bc_x, bc_y, bc_z], bc_vec=[bc_x, bc_y, bc_z], bc_density=[bc_x_density, bc_y_density, bc_z_density], boundary_mask=boundary_mask)
 
