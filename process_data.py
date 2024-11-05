@@ -105,8 +105,32 @@ plt.show()
 
 
 
+# Replot the dm_dt (i.e., Q) data vs time to add axes labels and stuff
 
+for hole_width in hole_widths:
+    for hole_count in hole_counts:
+        for repeat in repeats:
+            # load dm_dt
+            try:
+                file_name = data_path + f"log_holecount_{hole_count}_holewidth_{hole_width}_repeat_{repeat}_dm_dt.npy"
+                dm_dt_data = np.load(file_name, allow_pickle=True)
+                print(f"Loaded {file_name}")
+            except FileNotFoundError:
+                print(f"File {file_name} not found")
+                continue
 
+            dm_dt = np.array([entry['dm_dt'] for entry in dm_dt_data], dtype=float)
+            time = np.arange(len(dm_dt)) * data_tracker_interval
+
+            # Plot dm_dt vs time
+            plt.figure(figsize=(10, 6))
+            plt.title("Q vs time")
+            plt.xlabel("Time")
+            plt.ylabel("Q")
+            plt.plot(time, dm_dt)
+            LOG_NAME = f"log_holecount_{hole_count}_holewidth_{hole_width}_repeat_{repeat}"
+            plt.savefig(f"results/dm_dtOverTime/{LOG_NAME}.pdf")
+            # plt.show()
 
         
 
