@@ -485,13 +485,10 @@ def get_z_slice_density_movie(storage, z_slice=Z_SIZE // 2):
     for time in range(len(storage)):
         sliced_values = storage[time].data[3][:, :, z_slice]
         new_data.append(sliced_values)
+    new_data = np.array(new_data)
     grid_size = [X_SIZE, Y_SIZE]
     grid = pde.UnitGrid(grid_size)  
-    for time in range(len(storage)):
-        sliced_values = storage[time].data[3][:, :, z_slice]
-        new_data.append(sliced_values)
 
-    new_data = np.array(new_data)
     field_obj = pde.ScalarField(grid, data=new_data[0])
     res = pde.storage.memory.MemoryStorage(times=list(range(len(storage))), data=new_data, field_obj=field_obj)
 
