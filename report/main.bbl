@@ -112,7 +112,35 @@
       \verb 10.1093/acprof:oso/9780199562091.001.0001
       \endverb
     \endentry
+    \entry{RungeKutta}{book}{}
+      \name{author}{1}{}{%
+        {{hash=0eab1ccd4d6c57a2ff6794a4724ccafb}{%
+           family={Press},
+           familyi={P\bibinitperiod},
+           given={William\bibnamedelima H},
+           giveni={W\bibinitperiod\bibinitdelim H\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Cambridge university press}%
+      }
+      \strng{namehash}{0eab1ccd4d6c57a2ff6794a4724ccafb}
+      \strng{fullhash}{0eab1ccd4d6c57a2ff6794a4724ccafb}
+      \strng{bibnamehash}{0eab1ccd4d6c57a2ff6794a4724ccafb}
+      \strng{authorbibnamehash}{0eab1ccd4d6c57a2ff6794a4724ccafb}
+      \strng{authornamehash}{0eab1ccd4d6c57a2ff6794a4724ccafb}
+      \strng{authorfullhash}{0eab1ccd4d6c57a2ff6794a4724ccafb}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{isbn}{9780521880688}
+      \field{title}{Numerical recipes 3rd edition: The art of scientific computing}
+      \field{year}{2007}
+      \field{pages}{907\bibrangedash 915}
+      \range{pages}{9}
+    \endentry
   \enddatalist
+  \missing{eulerEqs}
 \endrefsection
 \endinput
 
