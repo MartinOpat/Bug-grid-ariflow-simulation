@@ -1,10 +1,11 @@
 \contentsline {section}{\numberline {1}Introduction}{2}{section.1}%
 \contentsline {subsection}{\numberline {1.1}Research question}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Research goals}{2}{subsection.1.2}%
 \contentsline {section}{\numberline {2}Model and Methodology}{3}{section.2}%
 \contentsline {subsection}{\numberline {2.1}Model}{3}{subsection.2.1}%
 \contentsline {section}{\numberline {3}Simulation setup}{5}{section.3}%
 \contentsline {section}{\numberline {4}Results}{6}{section.4}%
 \contentsline {section}{\numberline {5}Discussion}{9}{section.5}%
-\contentsline {section}{\numberline {6}Conclusion}{11}{section.6}%
-\contentsline {section}{\numberline {7}References}{12}{section.7}%
-\contentsline {section}{\numberline {Appendix A}\hspace {1.9cm}}{13}{appendix.A}%
+\contentsline {section}{\numberline {6}Conclusion}{12}{section.6}%
+\contentsline {section}{\numberline {7}References}{13}{section.7}%
+\contentsline {section}{\numberline {Appendix A}\hspace {1.9cm}}{14}{appendix.A}%
