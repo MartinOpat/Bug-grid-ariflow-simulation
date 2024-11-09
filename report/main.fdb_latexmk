@@ -1,12 +1,12 @@
 # Fdb version 4
-["biber main"] 1731157339.01543 "main.bcf" "main.bbl" "main" 1731157341.43804 0
-  "main.bcf" 1731157341.36989 107736 b48e35426c1ba8055d56ecceff8334c4 "pdflatex"
+["biber main"] 1731158490.06544 "main.bcf" "main.bbl" "main" 1731160112.1712 0
+  "main.bcf" 1731160112.0962 107799 4c235a8ab935d0e7cc32cc198aefff47 "pdflatex"
   "references.bib" 1730798382.41071 1227 ad79d5e8f9f512dc0b0bde0d28b5fe60 ""
   (generated)
   "main.bbl"
   "main.blg"
   (rewritten before read)
-["pdflatex"] 1731157340.47959 "/home/martin/repos/Bug-grid-ariflow-simulation/report/main.tex" "main.pdf" "main" 1731157341.43826 0
+["pdflatex"] 1731160111.0509 "/home/martin/repos/Bug-grid-ariflow-simulation/report/main.tex" "main.pdf" "main" 1731160112.17144 0
   "/etc/texmf/web2c/texmf.cnf" 1728470744.94901 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/home/martin/repos/Bug-grid-ariflow-simulation/report/main.tex" 1730798382.41071 2458 e38ba088373283499f614e36fb890cef ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -213,15 +213,15 @@
   "figures/fse.png" 1730798382.40571 33424 91642bd1c93890361fa69de065d70c3c ""
   "figures/mosquitogrid.jpg" 1730798382.40671 1122365 2daead8217addf7aa6d5d7189f6957ad ""
   "glossary.tex" 1730798382.40671 4284 5aa4e44ded5c8d4c9a11f4687e1c76ae ""
-  "main.aux" 1731157341.36789 7283 1dd489c107ccc3b79976f60d3b70d977 "pdflatex"
-  "main.bbl" 1731157339.4599 5550 fe2eaa1d5970add3a2dbaac0958d0d6f "biber main"
-  "main.out" 1731157341.36789 1020 9981ff09a6662054782b135b013173d4 "pdflatex"
-  "main.run.xml" 1731157341.37089 2402 7c866ed2192e71c57464ed4279aadefa "pdflatex"
+  "main.aux" 1731160112.0932 7340 abf1f8243549531980d6826a5494c9c3 "pdflatex"
+  "main.bbl" 1731158490.68741 5571 ebdb9a1d439e12d0441fdbcc5d74d525 "biber main"
+  "main.out" 1731160112.0942 1020 9981ff09a6662054782b135b013173d4 "pdflatex"
+  "main.run.xml" 1731160112.0972 2402 7c866ed2192e71c57464ed4279aadefa "pdflatex"
   "main.tex" 1730798382.41071 2458 e38ba088373283499f614e36fb890cef ""
-  "main.toc" 1731157341.37089 716 e8c3f50841fd38b2ffab17c0ebddbf09 "pdflatex"
+  "main.toc" 1731160112.0972 716 e8c3f50841fd38b2ffab17c0ebddbf09 "pdflatex"
   "sections/appendixA.tex" 1730798382.41071 170 e839e9269fbb6d0c818b936af6e7fb47 ""
   "sections/conclusion.tex" 1730798382.41071 546 7dfdbab4354cdd714fdb114ad5872925 ""
-  "sections/discussion.tex" 1731157337.82291 7547 947af95733d7d3ba4dc0facf1e4e886b ""
+  "sections/discussion.tex" 1731160110.87621 8111 932ad297a5d8255de625557202c2bd7a ""
   "sections/implementation.tex" 1730798382.41171 440 1b375cb382dd817ba134a363ebdbe52c ""
   "sections/intro_motiv.tex" 1730798382.41171 2172 e7433b766bd2d242b2de4c64f7fd7d9c ""
   "sections/methods.tex" 1730798382.41171 5775 d6c401af03d9c332e41464d5780ceae4 ""
