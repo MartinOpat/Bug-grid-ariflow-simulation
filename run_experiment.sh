@@ -2,9 +2,7 @@
 
 # Define arrays of values for each parameter
 hole_counts=(1 3 5 7 10 12)
-# hole_counts=(7)
 hole_widths=(0.1 0.2 0.3 0.4)
-# hole_widths=(0.4)
 
 # Loop through each combination of parameters
 for REPEAT in {1..3}; do
@@ -17,8 +15,12 @@ for REPEAT in {1..3}; do
             export LOG_NAME
             export REPEAT
             
-            # Run the Python script with these environment variables
+            # Run the Python script with these environment variables (parallel version)
+            # python3 experimentor.py &
+
+            # Run the Python script with these environment variables (sequential version)
             python3 experimentor.py
         done
+        wait
     done
 done

@@ -120,6 +120,20 @@ class CompressibleFlowPDE(pde.PDEBase):
 
         @jit(nopython=True)
         def convective_derivative(u, gradient_u_x, gradient_u_y, gradient_u_z):
+            """
+            Calculates the convective derivative D/Dt of a 3D vector field.
+
+            @params:
+            u: np.ndarray
+                A 3D vector field.
+            gradient_u_x: np.ndarray
+                The x-component of the gradient of the vector field.
+            gradient_u_y: np.ndarray
+                The y-component of the gradient of the vector field.
+            gradient_u_z: np.ndarray
+                The z-component of the gradient of the vector field.
+
+            """
             result = np.zeros_like(u)
             for i in range(3):
                 result[i] = u[0] * gradient_u_x[i] + u[1] * gradient_u_y[i] + u[2] * gradient_u_z[i]
@@ -138,6 +152,12 @@ class CompressibleFlowPDE(pde.PDEBase):
             Apply a boundary mask to a 3D vector field.
             This function inplace sets the components of the vector field to zero at the positions
             where the boundary mask is True.
+
+            @params:
+            vector_field: np.ndarray
+                A 3D vector field.
+            boundary_mask: np.ndarray
+                A 3D boolean mask.
             """
             for i in range(X_SIZE):
                 for j in range(Y_SIZE):
@@ -154,6 +174,12 @@ class CompressibleFlowPDE(pde.PDEBase):
             Multiplies a scalar with a vector field element-wise.
             
             Returns a new matrix as the result.
+
+            @params:
+            scalar: float
+                A scalar value.
+            vector_field: np.ndarray
+                A 3D vector field.
             """
             result = np.zeros_like(vector_field)
             for i in range(3):
@@ -166,6 +192,12 @@ class CompressibleFlowPDE(pde.PDEBase):
             Multiplies each component of a 3D vector field by a corresponding scalar field.
 
             Returns a new matrix as the result.
+
+            @params:
+            scalar_field: np.ndarray
+                A 3D scalar field.
+            vector_field: np.ndarray
+                A 3D vector field.
             """
             result = np.zeros_like(vector_field, dtype=np.float64)
             for x in range(X_SIZE):
@@ -185,6 +217,12 @@ class CompressibleFlowPDE(pde.PDEBase):
             This function iterates over a 3D vector field and adds a specified force
             to the x-component of the vector at each point, except where the boundary
             mask is True.
+
+            @params:
+            vector_field: np.ndarray
+                A 3D vector field.
+            force: float
+                The force to be applied to the x-component.
             """
 
             for x in range(X_SIZE):
@@ -281,6 +319,10 @@ def plot_2d_slice(vector_field):
     Notes:
     ------
     The function saves the plot as a PDF file in the 'results/velocity/' directory.
+
+    @params:
+    vector_field: np.ndarray
+        A 3D vector field to be plotted.
     """
     
     # Extract the u, v, w components
@@ -332,6 +374,12 @@ def plot_2d_scalar_slice(scalar_field, name):
     Notes:
     ------
     The function saves the plot as a PDF file in the 'results/{name}/' directory.
+
+    @params:
+    scalar_field: np.ndarray
+        A 3D scalar field to be plotted.
+    name: str 
+        The name of the field to be used in the directory name.
     """
     # Choose a Z slice
     z_slice = Z_SIZE // 2
@@ -412,6 +460,14 @@ bug_grid_mask = get_bug_grid_mask()
 def create_dm_dt_tracker(idx, dy, data_tracker_interval):
     """
     Create a data tracker for monitoring the rate of change of mass (dm/dt) during simulation.
+
+    @params:
+    idx: int
+        The index of the bug grid mask.
+    dy: float
+        The length of the discretised cell in the y-direction.
+    data_tracker_interval: float
+        The interval at which the data tracker should record the rate of change of mass.
     """
     def get_dm_dt(states, time):
         state, state_density = states
@@ -459,6 +515,12 @@ def plot_dm_dt(dm_dt_tracker_data, data_tracker_interval):
     time steps based on the data_tracker_interval, and generates a plot of dm/dt versus time.
     The plot is then saved in the "results/dm_dtOverTime" directory with the filename based on
     the LOG_NAME variable.
+
+    @params:
+    dm_dt_tracker_data: list
+        A list of dictionaries containing the dm/dt data.
+    data_tracker_interval: float
+        The interval at which the data tracker recorded the rate of change of mass
     """
 
     dm_dts = []
@@ -480,6 +542,12 @@ plot_dm_dt(dm_dt_tracker.data, data_tracker_interval)
 def get_z_slice_density_movie(storage, z_slice=Z_SIZE // 2):
     """
     Generates a storage of slices along the z-axis from the given storage data.
+
+    @params:
+    storage: pde.storage.memory.MemoryStorage
+        The storage object containing the simulation data.
+    z_slice: int
+        The index of the z-slice to extract from the 3D data.
     """
     new_data = []
     for time in range(len(storage)):
