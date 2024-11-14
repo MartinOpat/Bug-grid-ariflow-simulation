@@ -2,9 +2,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pde
 from pde.tools.numba import jit
-from numba import prange
-from scipy.ndimage import gaussian_filter, convolve, uniform_filter
-from scipy.integrate import trapezoid
 import time
 import os
 
@@ -19,102 +16,150 @@ def get_required_env_var(var_name):
         raise EnvironmentError(f'The environment variable {var_name} is not set.')
 
 LOG_NAME = get_required_env_var("LOG_NAME")
+HOLE_COUNT = int(get_required_env_var("HOLE_COUNT"))
+HOLE_WIDTH = float(get_required_env_var("HOLE_WIDTH"))
 
 X_SIZE = 200 # should be divisible by 2
 Y_SIZE = 100
 Z_SIZE = 1
 
-class CustomPDE(pde.PDEBase):
+class CompressibleFlowPDE(pde.PDEBase):
+    """
+    Implementing the Navier-Stokes PDEs for compressible fluid flow
+    to model the velocity field in a wind tunnel with a boundary_mask
+    which blocks the fluid.
 
-    def __init__(self, bc, bc_density, boundary_mask, bc_vec):
-        self.bc = bc
+    Notes:
+    ------
+    Assuming the following physical assumptions:
+    1. Mass conservation
+    2. Isotropy (i.e., no gravity)
+    3. Compressible fluid
+    4. Newtonian fluid
+    Additionally, using the mass continuity equation to model density
+    in the fluid.
+    """
+    def __init__(self, boundary_mask):
         self.boundary_mask = np.ascontiguousarray(boundary_mask, dtype=np.bool_)
-        self.vector_array = np.zeros((3, X_SIZE, Y_SIZE, Z_SIZE), dtype=np.float64)
-        self.vector_array[0, -1 + X_SIZE//2:1 + X_SIZE//2, :, :] = 10
-        self.vector_array = np.ascontiguousarray(self.vector_array, dtype=np.float64)
         self.dynamic_viscosity = 0.005
         self.bulk_viscosity = 0.1
-        self.bc_vec = bc_vec
         self.RT = 1
         self.artificial_viscosity_coefficient = 0.2
-    
-        self.bc_density = bc_density
 
-        self.laplace_u = None
-        self.divergence_u = None
-        self.gradient_u = None
-        self.gradient_u_2 = None
+        self.laplace_u_op = None
+        self.divergence_u_op = None
+        self.gradient_u_op = None
+        self.gradient_divergence_u_op = None
 
         self.check_implementation = False
 
+        bc_x = "periodic"
+        bc_y = {"value": 0}
+        bc_z = {"value": 0}
+
+        bc_x_density = "periodic"
+        bc_y_density = {"derivative": 0}
+        bc_z_density = {"derivative": 0}
+
+        self.bc=[bc_x, bc_y, bc_z]
+        self.bc_vec=[bc_x, bc_y, bc_z]
+        self.bc_density=[bc_x_density, bc_y_density, bc_z_density]
+
+
     def evolution_rate(self, states, t=0):
-        state, density = states
+        """
+        This method computes the time derivatives of the velocity (u) and density (p) fields
+        using the Navier-Stokes equations with added artificial viscosity and boundary conditions.
 
-        state.data[:, self.boundary_mask] = 0
-                # Cap speed at \sqrt{3} v0
-        # state.data[0, :, :, :] = np.clip(state.data[0, :, :, :], -10, 10)
-        # state.data[1, :, :, :] = np.clip(state.data[1, :, :, :], -10, 10)
-        # state.data[2, :, :, :] = np.clip(state.data[2, :, :, :], -10, 10)
+        Notes:
+        ------
+        - Artificial viscosity is added to stabilize the solution and prevent non-physical oscillations.
+        - Boundary conditions are applied to ensure no-slip conditions at the boundaries.
+        - Random noise is added to the velocity field at non-boundary cells to simulate turbulence.
+        """
+        u, p = states # velocity, density
 
-        laplacian = state.laplace(bc=self.bc_vec)
-        f_u = state.dot(state.gradient(bc=self.bc_vec)) - (self.dynamic_viscosity/density) * laplacian \
-            - (self.bulk_viscosity/density + self.dynamic_viscosity / (3*density)) * state.divergence(bc=self.bc_vec).gradient(bc=self.bc)
+        u.data[:, self.boundary_mask] = 0
+        laplacian = u.laplace(bc=self.bc_vec)
+        f_u = u.dot(u.gradient(bc=self.bc_vec)) - (self.dynamic_viscosity/p) * laplacian \
+            - (self.bulk_viscosity/p + self.dynamic_viscosity / (3*p)) * u.divergence(bc=self.bc_vec).gradient(bc=self.bc)
         
-        pressure = density*self.RT
-        ans = -f_u - pressure.gradient(bc=self.bc_density) / density.data[np.newaxis, :, :, :]
+        pressure = p*self.RT
+        u_t = -f_u - pressure.gradient(bc=self.bc_density) / p.data[np.newaxis, :, :, :]
 
-        artificial_viscosity = self.artificial_viscosity_coefficient * state.laplace(bc=self.bc_vec)
-        ans += artificial_viscosity
-        # ans.data[0, ~self.boundary_mask] += 0.1
-        ans.data[0, ~self.boundary_mask] += np.random.normal(loc=0.1, scale=0.01, size=ans.data[0, ~self.boundary_mask].shape)
+        artificial_viscosity = self.artificial_viscosity_coefficient * u.laplace(bc=self.bc_vec)
+        u_t += artificial_viscosity
+        u_t.data[0, ~self.boundary_mask] += np.random.normal(loc=0.1, scale=0.01, size=u_t.data[0, ~self.boundary_mask].shape)
 
+        p_t = -(u*p).divergence(bc=self.bc_density)
+        u_t.data[:, self.boundary_mask] = 0
 
-        # ans.data[:, self.boundary_mask] = 0
-        density_derivative = -(state*density).divergence(bc=self.bc_density)
-        # density_derivative.data[self.boundary_mask] = 0
-        ans.data[:, self.boundary_mask] = 0
-
-
-        return pde.FieldCollection([ans, density_derivative])
+        return pde.FieldCollection([u_t, p_t])
 
     def _make_pde_rhs_numba(self, states): 
-        state, state_density = states
-        if self.laplace_u is None:
-            self.laplace_u = state.grid.make_operator("vector_laplace", bc=self.bc_vec)
-        if self.divergence_u is None:
-            self.divergence_u = state.grid.make_operator("divergence", bc=self.bc_vec)
-        if self.gradient_u is None:
-            self.gradient_u = state.grid.make_operator("vector_gradient", bc=self.bc_vec)
-        if self.gradient_u_2 is None:
-            self.gradient_u_2 = state.grid.make_operator("gradient", bc=self.bc)
+        """
+        This method creates and returns a JIT-compiled version of the evolution_rate method.
+        """
+        state_velocity, state_density = states
+        if self.laplace_u_op is None:
+            self.laplace_u_op = state_velocity.grid.make_operator("vector_laplace", bc=self.bc_vec)
+        if self.divergence_u_op is None:
+            self.divergence_u_op = state_velocity.grid.make_operator("divergence", bc=self.bc_vec)
+        if self.gradient_u_op is None:
+            self.gradient_u_op = state_velocity.grid.make_operator("vector_gradient", bc=self.bc_vec)
+        if self.gradient_divergence_u_op is None:
+            self.gradient_divergence_u_op = state_velocity.grid.make_operator("gradient", bc=self.bc)
         
-        laplace_u = self.laplace_u
-        divergence_u = self.divergence_u
-        gradient_u = self.gradient_u
-        gradient_u_2 = self.gradient_u_2
+        laplace_u_op = self.laplace_u_op
+        divergence_u_op = self.divergence_u_op
+        gradient_u_op = self.gradient_u_op
+        gradient_divergence_u_op = self.gradient_divergence_u_op
 
-        divergence_p_u = state_density.grid.make_operator("divergence", bc=self.bc_density)
+        divergence_p_u_op = state_density.grid.make_operator("divergence", bc=self.bc_density)
         gradient_p_u = state_density.grid.make_operator("gradient", bc=self.bc_density)
 
-        @jit(nopython=True, parallel=True)
+        @jit(nopython=True)
         def convective_derivative(u, gradient_u_x, gradient_u_y, gradient_u_z):
+            """
+            Calculates the convective derivative D/Dt of a 3D vector field.
+
+            @params:
+            u: np.ndarray
+                A 3D vector field.
+            gradient_u_x: np.ndarray
+                The x-component of the gradient of the vector field.
+            gradient_u_y: np.ndarray
+                The y-component of the gradient of the vector field.
+            gradient_u_z: np.ndarray
+                The z-component of the gradient of the vector field.
+
+            """
             result = np.zeros_like(u)
-            for i in prange(3):
+            for i in range(3):
                 result[i] = u[0] * gradient_u_x[i] + u[1] * gradient_u_y[i] + u[2] * gradient_u_z[i]
             return result
 
 
         dynamic_viscosity = self.dynamic_viscosity
         bulk_viscosity = self.bulk_viscosity
-        vector_array = self.vector_array
         boundary_mask = self.boundary_mask
         artificial_viscosity_coefficient = self.artificial_viscosity_coefficient
-        # apply_boundary_mask = self.apply_boundary_mask
         RT = self.RT
 
-        @jit(nopython=True, parallel=True)
+        @jit(nopython=True)
         def apply_boundary_mask(vector_field, boundary_mask):
-            for i in prange(X_SIZE):
+            """
+            Apply a boundary mask to a 3D vector field.
+            This function inplace sets the components of the vector field to zero at the positions
+            where the boundary mask is True.
+
+            @params:
+            vector_field: np.ndarray
+                A 3D vector field.
+            boundary_mask: np.ndarray
+                A 3D boolean mask.
+            """
+            for i in range(X_SIZE):
                 for j in range(Y_SIZE):
                     for k in range(Z_SIZE):
                         if boundary_mask[i, j, k]:
@@ -123,17 +168,39 @@ class CustomPDE(pde.PDEBase):
                             vector_field[2, i, j, k] = 0
 
         
-        @jit(nopython=True, parallel=True)
-        def multiply_scalar_vector(scalar, vector):
-            result = np.zeros_like(vector)
+        @jit(nopython=True)
+        def multiply_scalar_vector(scalar, vector_field):
+            """
+            Multiplies a scalar with a vector field element-wise.
+            
+            Returns a new matrix as the result.
+
+            @params:
+            scalar: float
+                A scalar value.
+            vector_field: np.ndarray
+                A 3D vector field.
+            """
+            result = np.zeros_like(vector_field)
             for i in range(3):
-                result[i] = scalar * vector[i]
+                result[i] = scalar * vector_field[i]
             return result
 
-        @jit(nopython=True, parallel=True)
+        @jit(nopython=True)
         def multiply_scalar_vector_field(scalar_field, vector_field):
+            """
+            Multiplies each component of a 3D vector field by a corresponding scalar field.
+
+            Returns a new matrix as the result.
+
+            @params:
+            scalar_field: np.ndarray
+                A 3D scalar field.
+            vector_field: np.ndarray
+                A 3D vector field.
+            """
             result = np.zeros_like(vector_field, dtype=np.float64)
-            for x in prange(X_SIZE):
+            for x in range(X_SIZE):
                 for y in range(Y_SIZE):
                     for z in range(Z_SIZE):
                         result[0][x][y][z] = vector_field[0][x][y][z]*scalar_field[x][y][z]
@@ -142,60 +209,80 @@ class CustomPDE(pde.PDEBase):
 
             return result
 
-        @jit(nopython=True, parallel=True)
+        @jit(nopython=True)
         def apply_force_to_x(vector_field, force):
-            for x in prange(X_SIZE):
+            """
+            Applies a force to the x-component of a 3D vector field.
+
+            This function iterates over a 3D vector field and adds a specified force
+            to the x-component of the vector at each point, except where the boundary
+            mask is True.
+
+            @params:
+            vector_field: np.ndarray
+                A 3D vector field.
+            force: float
+                The force to be applied to the x-component.
+            """
+
+            for x in range(X_SIZE):
                 for y in range(Y_SIZE):
                     for z in range(Z_SIZE):
                         if not boundary_mask[x, y, z]:
                             vector_field[0, x, y, z] += force
             
 
-        @jit(nopython=True, parallel=True)
+        @jit(nopython=True)
         def pde_rhs(state_datas, t=0):
-            state_data = state_datas[0:3]
-            state_density_data = state_datas[3]
-            apply_boundary_mask(state_data, boundary_mask)
-            # state_data = clamp_vector_field(state_data, 10)
-            # print(type(state_density_data))
-            # state_data, state_density_data = state_datas
-            state_lapacian = laplace_u(state_data)
-            state_grad = gradient_u(state_data)
-            state_grad2 = gradient_u_2(divergence_u(state_data))
-            product_p_u = multiply_scalar_vector_field(state_density_data, state_data)
-            state_divergence_p = divergence_p_u(product_p_u)
+            """
+            This method computes the time derivatives of the velocity (u) and density (p) fields
+            using numba to run in a JIT-compiled way.
 
-            shear_viscosity = dynamic_viscosity/state_density_data
-            bulk_kinematic_viscosity = bulk_viscosity/state_density_data
+            Notes:
+            ------
+            Identical calculation as in the evolution_rate method.
+            """
+            
+            u = state_datas[0:3] # velocity
+            p = state_datas[3] # density
 
-            con_dev = convective_derivative(state_data, state_grad[0], state_grad[1], state_grad[2])
+            apply_boundary_mask(u, boundary_mask)
 
-            shear_lap = multiply_scalar_vector(shear_viscosity, state_lapacian)
+            lapacian_u = laplace_u_op(u)
+            gradient_u = gradient_u_op(u)
+            gradient_divergence_u = gradient_divergence_u_op(divergence_u_op(u))
+            p_u = multiply_scalar_vector_field(p, u)
+            divergence_p_u = divergence_p_u_op(p_u)
 
-            vis_grad2 = multiply_scalar_vector(bulk_kinematic_viscosity + shear_viscosity / 3, state_grad2)
+            shear_viscosity = dynamic_viscosity/p
+            bulk_kinematic_viscosity = bulk_viscosity/p
 
-            f_u = con_dev - shear_lap - vis_grad2
+            con_dev = convective_derivative(u, gradient_u[0], gradient_u[1], gradient_u[2])
 
-            pressure = state_density_data*RT
-            # ans = -f_u - pressure.gradient(bc=self.bc_density) / density.data[np.newaxis, :, :, :]
-            ans = -f_u - multiply_scalar_vector_field(1/state_density_data, gradient_p_u(pressure))
+            shear_lap = multiply_scalar_vector(shear_viscosity, lapacian_u)
 
-            ans += state_lapacian*artificial_viscosity_coefficient
+            vis_grad = multiply_scalar_vector(bulk_kinematic_viscosity + shear_viscosity / 3, gradient_divergence_u)
 
+            f_u = con_dev - shear_lap - vis_grad
 
-            # apply_force_to_x(ans, 0.1)
+            pressure = p*RT
+            u_t = -f_u - multiply_scalar_vector_field(1/p, gradient_p_u(pressure)) \
+                  + lapacian_u*artificial_viscosity_coefficient
+
             force = np.random.normal(loc=0.1, scale=0.01)
-            apply_force_to_x(ans, force)
+            apply_force_to_x(u_t, force)
 
-            apply_boundary_mask(ans, boundary_mask)
+            apply_boundary_mask(u_t, boundary_mask)
 
-            density_t = -state_divergence_p
-            # return np.stack([ans, density_t])
-            return np.concatenate((ans, density_t[np.newaxis,:,:,:]), axis=0)
+            p_t = -divergence_p_u
+            return np.concatenate((u_t, p_t[np.newaxis,:,:,:]), axis=0)
 
         return pde_rhs
 
-class LivePlotTracker2(pde.LivePlotTracker):
+class DensityLivePlot(pde.LivePlotTracker):
+    """
+    A tracker that displays a live updating plot of the density during calculation.
+    """
     grid_size = [X_SIZE, Y_SIZE]
     grid = pde.UnitGrid(grid_size)  
     z_slice = Z_SIZE // 2
@@ -209,7 +296,10 @@ class LivePlotTracker2(pde.LivePlotTracker):
         field_obj = pde.ScalarField(self.grid, data=sliced_values)
         super().handle(field_obj, t)
 
-class LivePlotTrackerVf(pde.LivePlotTracker):
+class SpeedLivePlot(pde.LivePlotTracker):
+    """
+    A tracker that displays a plot of the magnitude of velocity during calculation.
+    """
     grid_size = [X_SIZE, Y_SIZE]
     grid = pde.UnitGrid(grid_size)  
     z_slice = Z_SIZE // 2
@@ -219,19 +309,29 @@ class LivePlotTrackerVf(pde.LivePlotTracker):
         return super().initialize(field_obj, info)
 
     def handle(self, state: pde.FieldBase, t: float) -> None:
-        # sliced_values = state.data[3][:, :, self.z_slice]
         sliced_values = np.linalg.norm(state.data[:3], axis=0)[:, :, self.z_slice]
         field_obj = pde.ScalarField(self.grid, data=sliced_values)
         super().handle(field_obj, t)
 
 def plot_2d_slice(vector_field):
+    """
+    Plots a 2D slice of a 3D vector field at the mid Z-plane in the form of a quiver plot.
+    Notes:
+    ------
+    The function saves the plot as a PDF file in the 'results/velocity/' directory.
+
+    @params:
+    vector_field: np.ndarray
+        A 3D vector field to be plotted.
+    """
+    
     # Extract the u, v, w components
     u = vector_field[0]
     v = vector_field[1]
     w = vector_field[2]
 
-    # Choose a specific Z slice (for example, the middle plane)
-    z_slice = Z_SIZE // 2  # Taking the middle slice, but this can be any valid Z index
+    # Choose a Z slice
+    z_slice = Z_SIZE // 2
 
     # Slice the vector field at the chosen Z-plane
     u_slice = u[:, :, z_slice]
@@ -269,8 +369,20 @@ def plot_2d_slice(vector_field):
     fig.savefig(f"results/velocity/{LOG_NAME}.pdf", dpi=100)
 
 def plot_2d_scalar_slice(scalar_field, name):
-    # Choose a specific Z slice (for example, the middle plane)
-    z_slice = Z_SIZE // 2  # Taking the middle slice, but this can be any valid Z index
+    """
+    Plots a 2D slice of a 3D scalar field at the mid Z-plane in the form of a heatmap.
+    Notes:
+    ------
+    The function saves the plot as a PDF file in the 'results/{name}/' directory.
+
+    @params:
+    scalar_field: np.ndarray
+        A 3D scalar field to be plotted.
+    name: str 
+        The name of the field to be used in the directory name.
+    """
+    # Choose a Z slice
+    z_slice = Z_SIZE // 2
 
     sliced_values = scalar_field[:, :, z_slice]
 
@@ -289,174 +401,170 @@ def plot_2d_scalar_slice(scalar_field, name):
     fig.savefig(f"results/{name}/{LOG_NAME}.pdf", dpi=100)
 
 grid = pde.CartesianGrid([[0, 10], [0, 5], [0, 5]], [X_SIZE, Y_SIZE, Z_SIZE], periodic=[True, False, False])
-dy = 5 / Y_SIZE
-# init_density = 15*np.ones((X_SIZE, Y_SIZE, Z_SIZE))
+dy = 5 / Y_SIZE # Y-direction Length of discretised cell
+
 init_density = np.random.normal(loc=15, scale=0.01, size=(X_SIZE, Y_SIZE, Z_SIZE))
 
-# init_density[:X_SIZE//2, :, :] = 5
 scalar_field = pde.VectorField(grid, data=0)
 density_field = pde.ScalarField(grid, data=init_density)
 field = pde.FieldCollection([scalar_field, density_field])
 
-# Set ALL x values to 1
-# field.data[0, :, :, :] = 1
+def get_bug_grid_mask():
+    """
+    Generates a mask for the bug grid based on the specified hole count and width.
+    The function creates a mask for grid lines with a thickness of 0.2.
+    In the middle of the x space i.e between 4.9 and 5.1 from a total range of 0 to 10.
+    It calculates the mask based on the 
+    number of holes (HOLE_COUNT) and the width of each hole (HOLE_WIDTH). The mask is used to determine the blocked 
+    and empty spaces in the grid.
+    Notes:
+        - The function also calculates the percentage of the window blocked in the x-y slice of the window and prints it.
+    """
 
-bc_left_x = {"value": [0.1, 0, 0]}       # Dirichlet condition on the left (x = 0)
-bc_right_x = {"derivative": 0}   # Neumann condition on the right (x = X_SIZE)
-bc_x_vec = [bc_left_x, bc_right_x] 
-bc_y = ( {"derivative": 0})
-bc_z = ( {"derivative": 0})
+    # Define the mask for grid lines with thickness of 5 in 3D
+    x, y, z = grid.cell_coords[..., 0], grid.cell_coords[..., 1], grid.cell_coords[..., 2]
 
-bc_x = "periodic"
-bc_y = ( {"value": 0})
-bc_z = ( {"value": 0})
+    if HOLE_COUNT != 1:
+        empty_space = HOLE_COUNT*HOLE_WIDTH
 
-bc_left_density = {"value": 15}  # Dirichlet condition for density at x = 0
-bc_right_density = {"derivative": 0} 
-bc_x_density = [bc_left_density, bc_right_density]
-bc_x_density = "periodic"
-bc_y_density = ( {"derivative": 0})
-bc_z_density = ( {"derivative": 0})
+        assert 0 <= empty_space <= 5, "Invalid parameters for boundary mask. There is more hole than the total height of the tunnel."
+        assert 1 <= HOLE_COUNT <= Y_SIZE//2-1, "Invalid parameters for boundary mask. There needs to be atleast one hole and no more than twice the resolution."
+        assert HOLE_WIDTH >= 5/Y_SIZE, "Invalid parameters for boundary mask. The hole width must be atleast one grid cell wide."
 
+        blocked_space = 5 - empty_space
+        blocked_count = HOLE_COUNT - 1
+        blocked_width = blocked_space/blocked_count
+        y_mask = HOLE_WIDTH < y % (blocked_width + HOLE_WIDTH) 
 
+        x_mask = (x >= 4.9) & (x <= 5.1)
 
-
-# Define the mask for grid lines with thickness of 5 in 3D
-x, y, z = grid.cell_coords[..., 0], grid.cell_coords[..., 1], grid.cell_coords[..., 2]
-
-hole_count = int(get_required_env_var("HOLE_COUNT"))
-hole_width = float(get_required_env_var("HOLE_WIDTH"))
-
-if hole_count != 1:
-    empty_space = hole_count*hole_width
-
-    assert 0 <= empty_space <= 5, "Invalid parameters for boundary mask. There is more hole than the total height of the tunnel."
-    assert 1 <= hole_count <= Y_SIZE//2-1, "Invalid parameters for boundary mask. There needs to be atleast one hole and no more than twice the resolution."
-    assert hole_width >= 5/Y_SIZE, "Invalid parameters for boundary mask. The hole width must be atleast one grid cell wide."
-
-    blocked_space = 5 - empty_space
-    blocked_count = hole_count - 1
-    blocked_width = blocked_space/blocked_count
-    y_mask = hole_width < y % (blocked_width + hole_width) 
-
-    x_mask = (x >= 4.9) & (x <= 5.1)
-
-    boundary_mask = y_mask & x_mask
-else:
-    # Empty window -> boundary mask is false everywhere
-    boundary_mask = np.zeros((X_SIZE, Y_SIZE, Z_SIZE), dtype=np.bool_)
-
-idx = X_SIZE//2  # Index of the window tracker for the density
-
-plt.title("boundary mask")
-plt.imshow(boundary_mask[X_SIZE//2,:, :])
-# plt.show()
-# exit()
+        bug_grid_mask = y_mask & x_mask
+    else:
+        # Empty window -> boundary mask is false everywhere
+        bug_grid_mask = np.zeros((X_SIZE, Y_SIZE, Z_SIZE), dtype=np.bool_)
 
 
-# Calculate the % of window blocked in the x-y slice of the window
-window_blocked = np.sum(boundary_mask[X_SIZE//2,:, :]) / Y_SIZE
-print("Window blocked: ", window_blocked)
-os.makedirs("results/window_blocked", exist_ok=True)
-# np.save(f"results/window_blocked/{LOG_NAME}.npy", window_blocked)
+    # plt.title("boundary mask")
+    # plt.imshow(bug_grid_mask[X_SIZE//2,:, :])
+    # plt.show()
+    # exit()
 
+    # Calculate the % of window blocked in the x-y slice of the window
+    window_blocked = np.sum(bug_grid_mask[X_SIZE//2,:, :]) / Y_SIZE
+    print("Window blocked: ", window_blocked)
+    return bug_grid_mask
 
-eq = CustomPDE(bc=[bc_x, bc_y, bc_z], bc_vec=[bc_x, bc_y, bc_z], bc_density=[bc_x_density, bc_y_density, bc_z_density], boundary_mask=boundary_mask)
+bug_grid_idx = X_SIZE//2  # Index of the window tracker for the density
+bug_grid_mask = get_bug_grid_mask()
 
-start_time = time.time()
+def create_dm_dt_tracker(idx, dy, data_tracker_interval):
+    """
+    Create a data tracker for monitoring the rate of change of mass (dm/dt) during simulation.
+
+    @params:
+    idx: int
+        The index of the bug grid mask.
+    dy: float
+        The length of the discretised cell in the y-direction.
+    data_tracker_interval: float
+        The interval at which the data tracker should record the rate of change of mass.
+    """
+    def get_dm_dt(states, time):
+        state, state_density = states
+
+        dm_dt = np.sum(state_density.data[idx] * state.data[0][idx] * dy)
+        return {"dm_dt": dm_dt}
+
+    dm_dt_tracker = pde.DataTracker(get_dm_dt, interval=data_tracker_interval)
+
+    return dm_dt_tracker
+
+eq = CompressibleFlowPDE(boundary_mask=bug_grid_mask)
+
 storage = pde.MemoryStorage()
-def get_statistics(states, time):
-    global idx, dy
-    state, state_density = states
-
-    dm_dt = np.sum(state_density.data[idx] * state.data[0][idx] * dy)
-    # print("dm_dt", dm_dt)
-    return {"dm_dt": dm_dt}
 
 data_tracker_interval = 0.1
-data_tracker = pde.DataTracker(get_statistics, interval=data_tracker_interval)
+dm_dt_tracker = create_dm_dt_tracker(bug_grid_idx, dy, data_tracker_interval)
+
+start_time = time.time()
 
 result = eq.solve(field, t_range=60, dt=1e-2, scheme="euler", adaptive=True, tracker=[
     storage.tracker(),
     pde.ProgressTracker(),
-    # LivePlotTracker2(),
-    data_tracker,
-    # LivePlotTrackerVf(),
+    DensityLivePlot(),
+    dm_dt_tracker,
+    SpeedLivePlot(),
     ])
-# result = eq.solve(field, t_range=1, dt=1e-2, adaptive=True)
 end_time = time.time()
 print("Execution Time: ", end_time - start_time, " seconds")
 
+# Save file whole history of data for further analysis
 os.makedirs("results/raw_data", exist_ok=True)
 np.save(f"results/raw_data/{LOG_NAME}.npy", storage.data)
-np.save(f"results/raw_data/{LOG_NAME}_dm_dt.npy", data_tracker.data)
+np.save(f"results/raw_data/{LOG_NAME}_dm_dt.npy", dm_dt_tracker.data)
 
+# Plot and save density and velocity fields
 plot_2d_scalar_slice(result[1].data, "density")
 plot_2d_scalar_slice(np.linalg.norm(result[0].data, axis=0), "velocity-magnitude")
 plot_2d_slice(result[0].data)
 
-dm_dts = []
-for dm_dt in data_tracker.data:
-    dm_dts.append(dm_dt['dm_dt'])
+def plot_dm_dt(dm_dt_tracker_data, data_tracker_interval):
+    """
+    Plots the rate of change of mass (dm/dt) over time and saves the plot as a PDF file.
+    This function retrieves the dm/dt data from the dm_dt_tracker_data, calculates the corresponding
+    time steps based on the data_tracker_interval, and generates a plot of dm/dt versus time.
+    The plot is then saved in the "results/dm_dtOverTime" directory with the filename based on
+    the LOG_NAME variable.
 
-dm_dts = np.array(dm_dts)
-ts = np.arange(start=0, stop=len(dm_dts)*data_tracker_interval, step=data_tracker_interval)
+    @params:
+    dm_dt_tracker_data: list
+        A list of dictionaries containing the dm/dt data.
+    data_tracker_interval: float
+        The interval at which the data tracker recorded the rate of change of mass
+    """
 
-plt.figure()
-plt.title("Q vs time")
-plt.xlabel("Time")
-plt.ylabel("Q")
-plt.plot(ts, dm_dts)
-os.makedirs("results/dm_dtOverTime", exist_ok=True)
-plt.savefig(f"results/dm_dtOverTime/{LOG_NAME}.pdf")
+    dm_dts = []
+    for dm_dt in dm_dt_tracker_data:
+        dm_dts.append(dm_dt['dm_dt'])
+    dm_dts = np.array(dm_dts)
+    ts = np.arange(start=0, stop=len(dm_dts)*data_tracker_interval, step=data_tracker_interval)
 
-# plt.show()
-# result[1].plot_interactive()
-# result[0].to_scalar(scalar='norm').plot_interactive()
+    plt.figure()
+    plt.title("Q vs time")
+    plt.xlabel("Time")
+    plt.ylabel("Q")
+    plt.plot(ts, dm_dts)
+    os.makedirs("results/dm_dtOverTime", exist_ok=True)
+    plt.savefig(f"results/dm_dtOverTime/{LOG_NAME}.pdf")
 
-# Export the movie
-# Cross-section
-def get_slice(storage, slice=32):
-    # Transform the 3D storage data to 2D slice at depth z
-    grid_size = [100, 100]
-    grid = pde.UnitGrid(grid_size)  
-    
+plot_dm_dt(dm_dt_tracker.data, data_tracker_interval)
+
+def get_z_slice_density_movie(storage, z_slice=Z_SIZE // 2):
+    """
+    Generates a storage of slices along the z-axis from the given storage data.
+
+    @params:
+    storage: pde.storage.memory.MemoryStorage
+        The storage object containing the simulation data.
+    z_slice: int
+        The index of the z-slice to extract from the 3D data.
+    """
     new_data = []
     for time in range(len(storage)):
-        # data=storage[time].data[:,:,slice]
-        norm = np.linalg.norm(storage[time].data, axis=0)
-        data=norm[slice, :, :]
-
-        new_data.append(data)
-    new_data = np.array(new_data)
-    field_obj = pde.ScalarField(grid, data=new_data[0])
-    res = pde.storage.memory.MemoryStorage(times=list(range(len(storage))), data=new_data, field_obj=field_obj)
-    # print("res",res[0])
-        
-    return res
-
-def get_z_slice_density_movie(storage, z_slice = Z_SIZE // 2):
-    new_data = []
-
-    grid_size = [X_SIZE, Y_SIZE]
-    grid = pde.UnitGrid(grid_size)  
-    for time in range(len(storage)):
-        # data=storage[time].data[:,:,slice]
-
         sliced_values = storage[time].data[3][:, :, z_slice]
         new_data.append(sliced_values)
-
     new_data = np.array(new_data)
+    grid_size = [X_SIZE, Y_SIZE]
+    grid = pde.UnitGrid(grid_size)  
+
     field_obj = pde.ScalarField(grid, data=new_data[0])
     res = pde.storage.memory.MemoryStorage(times=list(range(len(storage))), data=new_data, field_obj=field_obj)
 
     return res
-
-# new_storage = get_slice(storage, slice=50)
-# pde.movie(new_storage, filename="output3.mp4", plot_args={}, movie_args={})
 
 new_storage2 = get_z_slice_density_movie(storage)
 
+# Export movie of density data evolving throughout the simulation.
 vmin = np.min(new_storage2.data)
 vmax = np.max(new_storage2.data)
 

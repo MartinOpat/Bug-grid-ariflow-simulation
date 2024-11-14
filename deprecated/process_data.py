@@ -1,4 +1,4 @@
-import numpy as np
+git import numpy as np
 import matplotlib.pyplot as plt
 
 # Set bigger font of all matplotlib fonts
